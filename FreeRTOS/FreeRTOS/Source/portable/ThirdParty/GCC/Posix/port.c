@@ -262,6 +262,8 @@ Thread_t *xThreadToResume;
 
 	xThreadToSuspend = prvGetThreadFromTask( xTaskGetCurrentTaskHandle() );
 
+	//console_print("test string\n");
+	
 	vTaskSwitchContext();
 
 	xThreadToResume = prvGetThreadFromTask( xTaskGetCurrentTaskHandle() );

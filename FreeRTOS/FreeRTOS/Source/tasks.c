@@ -38,6 +38,7 @@
 #include "task.h"
 #include "timers.h"
 #include "stack_macros.h"
+#include "edf.h"
 
 /* Lint e9021, e961 and e750 are suppressed as a MISRA exception justified
  * because the MPU ports require MPU_WRAPPERS_INCLUDED_FROM_API_FILE to be defined
@@ -133,6 +134,7 @@
 
     #define taskSELECT_HIGHEST_PRIORITY_TASK()                                \
     {                                                                         \
+                               						      \
         UBaseType_t uxTopPriority = uxTopReadyPriority;                       \
                                                                               \
         /* Find the highest priority queue that contains ready tasks. */      \
@@ -347,6 +349,9 @@ PRIVILEGED_DATA static List_t xDelayedTaskList2;                         /*< Del
 PRIVILEGED_DATA static List_t * volatile pxDelayedTaskList;              /*< Points to the delayed task list currently being used. */
 PRIVILEGED_DATA static List_t * volatile pxOverflowDelayedTaskList;      /*< Points to the delayed task list currently being used to hold tasks that have overflowed the current tick count. */
 PRIVILEGED_DATA static List_t xPendingReadyList;                         /*< Tasks that have been readied while the scheduler was suspended.  They will be moved to the ready list when the scheduler is resumed. */
+
+//static List_t projectTaskEDFData_isDone; // 571 PROJECT DATA STRUCTURE
+//static List_t projectTaskEDFData_periods; // 571 PROJECT DATA STRUCTURE
 
 #if ( INCLUDE_vTaskDelete == 1 )
 
@@ -3041,7 +3046,7 @@ void vTaskSwitchContext( void )
                 pxCurrentTCB->iTaskErrno = FreeRTOS_errno;
             }
         #endif
-
+	
         /* Select a new task to run using either the generic C or port
          * optimised asm code. */
         taskSELECT_HIGHEST_PRIORITY_TASK(); /*lint !e9079 void * is used as this macro is used with timers and co-routines too.  Alignment is known to be fine as the type of the pointer stored and retrieved is the same. */
@@ -3641,6 +3646,14 @@ static void prvInitialiseTaskLists( void )
     vListInitialise( &xDelayedTaskList1 );
     vListInitialise( &xDelayedTaskList2 );
     vListInitialise( &xPendingReadyList );
+
+    //vListInitialise( &projectEDFData_isDone ); // 571 PROJECT
+    //vListInitialise( &projectEDFData_periods ); // 571 PROJECT
+
+//	console_print("TEST 1\n");
+    //edfInitLists();
+    //edfAddTaskToLists(); // 571 PROJECT
+//	console_print("TEST 2\n");
 
     #if ( INCLUDE_vTaskDelete == 1 )
         {

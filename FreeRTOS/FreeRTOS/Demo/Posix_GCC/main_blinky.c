@@ -117,6 +117,8 @@ queue send software timer respectively. */
 static void prvQueueReceiveTask( void *pvParameters );
 static void prvQueueSendTask( void *pvParameters );
 
+static int taskEndTime = 0;
+
 /*
  * The callback function executed when the software timer expires.
  */
@@ -202,6 +204,8 @@ const uint32_t ulValueToSend = mainVALUE_SENT_FROM_TASK;
 		write to the console.  0 is used as the block time so the send operation
 		will not block - it shouldn't need to block as the queue should always
 		have at least one space at this point in the code. */
+		console_print("send: %d\n Delay until: %d ==\n", xTaskGetTickCount(), xTaskGetTickCount() + xBlockTime);
+		taskEndTime = xTaskGetTickCount();
 		xQueueSend( xQueue, &ulValueToSend, 0U );
 	}
 }
@@ -222,6 +226,7 @@ const uint32_t ulValueToSend = mainVALUE_SENT_FROM_TIMER;
 	/* Send to the queue - causing the queue receive task to unblock and
 	write out a message.  This function is called from the timer/daemon task, so
 	must not block.  Hence the block time is set to 0. */
+	console_print("timer: %d", xTaskGetTickCount());
 	xQueueSend( xQueue, &ulValueToSend, 0U );
 }
 /*-----------------------------------------------------------*/
@@ -247,6 +252,7 @@ uint32_t ulReceivedValue;
 		using console IO so it is ok.  However, note the comments at the top of
 		this file about the risks of making Linux system calls (such as
 		console output) from a FreeRTOS task. */
+		console_print("receive: %d", xTaskGetTickCount());
 		if( ulReceivedValue == mainVALUE_SENT_FROM_TASK )
 		{
 			console_print( "Message received from task\n" );
