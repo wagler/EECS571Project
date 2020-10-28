@@ -3643,17 +3643,11 @@ static void prvInitialiseTaskLists( void )
         vListInitialise( &( pxReadyTasksLists[ uxPriority ] ) );
     }
 
+    //edfInitLists(); // 571 PROJECT
+    
     vListInitialise( &xDelayedTaskList1 );
     vListInitialise( &xDelayedTaskList2 );
     vListInitialise( &xPendingReadyList );
-
-    //vListInitialise( &projectEDFData_isDone ); // 571 PROJECT
-    //vListInitialise( &projectEDFData_periods ); // 571 PROJECT
-
-//	console_print("TEST 1\n");
-    //edfInitLists();
-    //edfAddTaskToLists(); // 571 PROJECT
-//	console_print("TEST 2\n");
 
     #if ( INCLUDE_vTaskDelete == 1 )
         {

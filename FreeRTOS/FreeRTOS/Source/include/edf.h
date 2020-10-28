@@ -8,40 +8,32 @@
 #include "list.h"
 #include "task.h"
 
-
-static List_t* projectEDFData_isDone;
-static List_t* projectEDFData_periods;
-
-
-void edfInitLists() {
-	projectEDFData_isDone = (List_t*)pvPortMalloc(sizeof(List_t));
-	projectEDFData_periods = (List_t*)pvPortMalloc(sizeof(List_t));
-}
-
-void edfAddTaskToLists() {
-	ListItem_t* newItem = (ListItem_t*)pvPortMalloc(sizeof(ListItem_t));
-	vListInitialiseItem(newItem);
-	newItem->xItemValue = 123;
-	/*console_print("ITEMS1: %d", listCURRENT_LIST_LENGTH(projectEDFData_periods));
-	vListInsertEnd(projectEDFData_periods, newItem);
-	console_print("ITEMS2: %d", listCURRENT_LIST_LENGTH(projectEDFData_periods));
-	console_print("items? %d", projectEDFData_periods->uxNumberOfItems);
-	*/
-}
+typedef struct taskData {
+	TaskHandle_t handle;
+	uint32_t period;
+	uint32_t deadline; // may delete later
+	uint8_t isDone; // task has completed an execution for this period
+} taskData_t;
 
 
-/*
-TickType_t edfGetTaskPeriod() {
-	# traverse project
-}
+typedef struct nodes {
+	taskData_t td;
+	struct node_t* next;
+} node_t;
 
+static node_t* edf_taskDataList; // head of linked list
 
-BaseType_t edfGetTaskDone() {
+// adds to the front right now. if that has to change later its nbd
+// the decision to use a taskData instead of taskData* const was purposeful
+void project_listPush(taskData_t data, node_t* head);
 
-	return pdTRUE // or pdFALSE
-}
-*/
-
+// vPortYieldFromISR in port.c gets task handles then feeds them to prvGetThreadFromTask
+// so this needs to return the handle of the task that should run next
+// this should run from the scheduler (probably in vTaskSwitchContext())
+TaskHandle_t edf_getNextTask();
+	// scan through edf_taskDataList and determine which task has the nearest deadline
+	// should be able to do so using only that list and xTaskGetTickCount()
+	// NOTE: need to make sure xTaskGetTickCount can be ran from inside scheduler
 
 
 #endif /* INC_EDF_H */

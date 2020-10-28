@@ -92,6 +92,9 @@
 /* Local includes. */
 #include "console.h"
 
+/* 571 PROJECT includes */
+#include "edf.h"
+
 /* Priorities at which the tasks are created. */
 #define mainQUEUE_RECEIVE_TASK_PRIORITY		( tskIDLE_PRIORITY + 2 )
 #define	mainQUEUE_SEND_TASK_PRIORITY		( tskIDLE_PRIORITY + 1 )
@@ -166,6 +169,14 @@ const TickType_t xTimerPeriod = mainTIMER_SEND_FREQUENCY_MS;
 		{
 			xTimerStart( xTimer, 0 );
 		}
+
+
+		/* 571 PROJECT EDF TEST */
+		taskData_t recvTaskData = {0, 1, 0, 0};
+		taskData_t sendTaskData = {0, 2, 0, 0};
+		project_listPush(recvTaskData, edf_taskDataList);
+		project_listPush(sendTaskData, edf_taskDataList);	
+
 
 		/* Start the tasks and timer running. */
 		vTaskStartScheduler();
