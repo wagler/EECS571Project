@@ -96,8 +96,8 @@
 #include "edf.h"
 
 /* Priorities at which the tasks are created. */
-#define mainQUEUE_RECEIVE_TASK_PRIORITY		( tskIDLE_PRIORITY + 2 )
-#define	mainQUEUE_SEND_TASK_PRIORITY		( tskIDLE_PRIORITY + 1 )
+#define mainQUEUE_RECEIVE_TASK_PRIORITY	1	//( tskIDLE_PRIORITY + 2 )
+#define	mainQUEUE_SEND_TASK_PRIORITY	2	//( tskIDLE_PRIORITY + 1 )
 
 /* The rate at which data is sent to the queue.  The times are converted from
 milliseconds to ticks using the pdMS_TO_TICKS() macro. */
@@ -147,6 +147,10 @@ const TickType_t xTimerPeriod = mainTIMER_SEND_FREQUENCY_MS;
 
 	if( xQueue != NULL )
 	{
+
+		taskData_t recvTaskData = {0, 2000, 0, 0, 1};
+		taskData_t sendTaskData = {0, 200, 0, 0, 2};
+
 		/* Start the two tasks as described in the comments at the top of this
 		file. */
 		xTaskCreate( prvQueueReceiveTask,			/* The function that implements the task. */
@@ -154,9 +158,9 @@ const TickType_t xTimerPeriod = mainTIMER_SEND_FREQUENCY_MS;
 					configMINIMAL_STACK_SIZE, 		/* The size of the stack to allocate to the task. */
 					NULL, 							/* The parameter passed to the task - not used in this simple case. */
 					mainQUEUE_RECEIVE_TASK_PRIORITY,/* The priority assigned to the task. */
-					NULL );							/* The task handle is not required, so NULL is passed. */
+					&recvTaskData.handle );							/* The task handle is not required, so NULL is passed. */
 
-		xTaskCreate( prvQueueSendTask, "TX", configMINIMAL_STACK_SIZE, NULL, mainQUEUE_SEND_TASK_PRIORITY, NULL );
+		xTaskCreate( prvQueueSendTask, "TX", configMINIMAL_STACK_SIZE, NULL, mainQUEUE_SEND_TASK_PRIORITY, &sendTaskData.handle );
 
 		/* Create the software timer, but don't start it yet. */
 		xTimer = xTimerCreate( "Timer",				/* The text name assigned to the software timer - for debug only as it is not used by the kernel. */
@@ -172,11 +176,14 @@ const TickType_t xTimerPeriod = mainTIMER_SEND_FREQUENCY_MS;
 
 
 		/* 571 PROJECT EDF TEST */
-		taskData_t recvTaskData = {0, 1, 0, 0};
-		taskData_t sendTaskData = {0, 2, 0, 0};
 		project_listPush(recvTaskData, edf_taskDataList);
 		project_listPush(sendTaskData, edf_taskDataList);	
 
+		console_print("recv handle: %d\n", recvTaskData.handle);
+		console_print("send handle: %d\n", sendTaskData.handle);
+
+		edf_currentPriorityNumber = 1;
+		//edf_getNextTask();
 
 		/* Start the tasks and timer running. */
 		vTaskStartScheduler();
@@ -209,15 +216,19 @@ const uint32_t ulValueToSend = mainVALUE_SENT_FROM_TASK;
 		The block time is specified in ticks, pdMS_TO_TICKS() was used to
 		convert a time specified in milliseconds into a time specified in ticks.
 		While in the Blocked state this task will not consume any CPU time. */
-		vTaskDelayUntil( &xNextWakeTime, xBlockTime );
+		//console_print("\t\t\t\tsend\n");
+		printf("send\n");
+		edf_markTaskDone(xTaskGetCurrentTaskHandle());
+		vTaskSuspend(NULL);
+		//vTaskDelayUntil( &xNextWakeTime, xBlockTime );
 
 		/* Send to the queue - causing the queue receive task to unblock and
 		write to the console.  0 is used as the block time so the send operation
 		will not block - it shouldn't need to block as the queue should always
 		have at least one space at this point in the code. */
-		console_print("send: %d\n Delay until: %d ==\n", xTaskGetTickCount(), xTaskGetTickCount() + xBlockTime);
-		taskEndTime = xTaskGetTickCount();
-		xQueueSend( xQueue, &ulValueToSend, 0U );
+		//console_print("send: %d\n Delay until: %d ==\n", xTaskGetTickCount(), xTaskGetTickCount() + xBlockTime);
+		//xQueueSend( xQueue, &ulValueToSend, 0U );
+		//console_print("\t\t\t\tsend\n");
 	}
 }
 /*-----------------------------------------------------------*/
@@ -237,8 +248,8 @@ const uint32_t ulValueToSend = mainVALUE_SENT_FROM_TIMER;
 	/* Send to the queue - causing the queue receive task to unblock and
 	write out a message.  This function is called from the timer/daemon task, so
 	must not block.  Hence the block time is set to 0. */
-	console_print("timer: %d", xTaskGetTickCount());
-	xQueueSend( xQueue, &ulValueToSend, 0U );
+//	console_print("timer: %d", xTaskGetTickCount());
+	//xQueueSend( xQueue, &ulValueToSend, 0U );
 }
 /*-----------------------------------------------------------*/
 
@@ -255,7 +266,7 @@ uint32_t ulReceivedValue;
 		indefinitely provided INCLUDE_vTaskSuspend is set to 1 in
 		FreeRTOSConfig.h.  It will not use any CPU time while it is in the
 		Blocked state. */
-		xQueueReceive( xQueue, &ulReceivedValue, portMAX_DELAY );
+		//xQueueReceive( xQueue, &ulReceivedValue, portMAX_DELAY );
 
 		/* To get here something must have been received from the queue, but
 		is it an expected value?  Normally calling printf() from a task is not
@@ -263,8 +274,11 @@ uint32_t ulReceivedValue;
 		using console IO so it is ok.  However, note the comments at the top of
 		this file about the risks of making Linux system calls (such as
 		console output) from a FreeRTOS task. */
-		console_print("receive: %d", xTaskGetTickCount());
-		if( ulReceivedValue == mainVALUE_SENT_FROM_TASK )
+		//console_print("\t\t\t\treceive: %d", xTaskGetTickCount());
+		printf("receive\n");
+		edf_markTaskDone(xTaskGetCurrentTaskHandle());
+		vTaskSuspend(NULL);
+		/*if( ulReceivedValue == mainVALUE_SENT_FROM_TASK )
 		{
 			console_print( "Message received from task\n" );
 		}
@@ -275,7 +289,7 @@ uint32_t ulReceivedValue;
 		else
 		{
 			console_print( "Unexpected message\n" );
-		}
+		}*/
 	}
 }
 /*-----------------------------------------------------------*/

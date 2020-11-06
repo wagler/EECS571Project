@@ -1701,12 +1701,25 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB )
 
 #if ( INCLUDE_vTaskSuspend == 1 )
 
-    void vTaskSuspend( TaskHandle_t xTaskToSuspend )
+    void vTaskSuspend( TaskHandle_t xTaskToSuspend)
     {
         TCB_t * pxTCB;
 
         taskENTER_CRITICAL();
         {
+	    // 571 project: need to set tasks done flag to true
+	    // hardcoded for now
+	    node_t* iter = edf_taskDataList;
+
+	    while(iter) {
+	    	if(iter->td.handle == xTaskToSuspend) {
+			iter->td.isDone = pdTRUE;
+			break;
+		}
+		iter = iter->next;
+	    }
+
+
             /* If null is passed in here then it is the running task that is
              * being suspended. */
             pxTCB = prvGetTCBFromHandle( xTaskToSuspend );
@@ -1715,14 +1728,14 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB )
 
             /* Remove task from the ready/delayed list and place in the
              * suspended list. */
-            if( uxListRemove( &( pxTCB->xStateListItem ) ) == ( UBaseType_t ) 0 )
-            {
-                taskRESET_READY_PRIORITY( pxTCB->uxPriority );
-            }
-            else
-            {
+            //if( uxListRemove( &( pxTCB->xStateListItem ) ) == ( UBaseType_t ) 0 )
+            //{
+            //    taskRESET_READY_PRIORITY( pxTCB->uxPriority );
+            //}
+            //else
+            //{
                 mtCOVERAGE_TEST_MARKER();
-            }
+            //}
 
             /* Is the task waiting on an event also? */
             if( listLIST_ITEM_CONTAINER( &( pxTCB->xEventListItem ) ) != NULL )
@@ -3049,8 +3062,24 @@ void vTaskSwitchContext( void )
 	
         /* Select a new task to run using either the generic C or port
          * optimised asm code. */
-        taskSELECT_HIGHEST_PRIORITY_TASK(); /*lint !e9079 void * is used as this macro is used with timers and co-routines too.  Alignment is known to be fine as the type of the pointer stored and retrieved is the same. */
-        traceTASK_SWITCHED_IN();
+
+	//console_print("outside contextswitch critical\n");
+	taskENTER_CRITICAL();
+	{
+	//console_print("t1\n");
+	edf_releaseTasks();
+	uint32_t num = edf_getNextTask();
+	//console_print("number %d\n\n", num);
+	//console_print("LIST 1 EMPTY: %d LIST 2 EMPTY: %d\n", (pxReadyTasksLists[1]).uxNumberOfItems, (pxReadyTasksLists[2]).uxNumberOfItems);
+	listGET_OWNER_OF_NEXT_ENTRY(pxCurrentTCB, &( pxReadyTasksLists[ num ]));
+	//pxCurrentTCB = (pxReadyTasksLists[edf_currentPriorityNumber].pxIndex)->pvOwner;
+	//console_print("t2\n");	
+	}
+	taskEXIT_CRITICAL();
+
+
+        //taskSELECT_HIGHEST_PRIORITY_TASK(); /*lint !e9079 void * is used as this macro is used with timers and co-routines too.  Alignment is known to be fine as the type of the pointer stored and retrieved is the same. */
+        //traceTASK_SWITCHED_IN();
 
         /* After the new task is switched in, update the global errno. */
         #if ( configUSE_POSIX_ERRNO == 1 )

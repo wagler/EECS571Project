@@ -49,6 +49,13 @@
  * semaphore or mutex.
  *----------------------------------------------------------*/
 
+//extern List_t* pxReadyTasksLists;
+//extern edf_currentPriorityNumber;
+//extern pxCurrentTCB;
+
+
+
+
 #include <errno.h>
 #include <pthread.h>
 #include <signal.h>
@@ -63,6 +70,10 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "utils/wait_for_event.h"
+
+#include "edf.h"
+extern pxCurrentTCB;
+
 /*-----------------------------------------------------------*/
 
 #define SIG_RESUME SIGUSR1
@@ -262,9 +273,13 @@ Thread_t *xThreadToResume;
 
 	xThreadToSuspend = prvGetThreadFromTask( xTaskGetCurrentTaskHandle() );
 
-	//console_print("test string\n");
-	
+	//console_print("tick: %d\n", xTaskGetTickCount());
+	//edf_releaseTasks();
+	//TaskHandle_t next = edf_getNextTask();
+	//console_print("next task %d\n", next);
+	//console_print("\nSWITCH %d\n", xTaskGetTickCount());
 	vTaskSwitchContext();
+	//listGET_OWNER_OF_NEXT_ENTRY(pxCurrentTCB, &( pxReadyTasksLists[ edf_currentPriorityNumber ] ));
 
 	xThreadToResume = prvGetThreadFromTask( xTaskGetCurrentTaskHandle() );
 

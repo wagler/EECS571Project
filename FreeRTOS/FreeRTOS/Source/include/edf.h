@@ -11,8 +11,9 @@
 typedef struct taskData {
 	TaskHandle_t handle;
 	uint32_t period;
-	uint32_t releaseTime; // may delete later
+	TickType_t releaseTime; // may delete later
 	BaseType_t isDone; // task has completed an execution for this period
+	uint32_t priorityNumber; // needed for TCB switching
 } taskData_t;
 
 
@@ -21,6 +22,7 @@ typedef struct nodes {
 	struct node_t* next;
 } node_t;
 
+static uint32_t edf_currentPriorityNumber;
 static node_t* edf_taskDataList; // head of linked list
 
 // adds to the front right now. if that has to change later its nbd
@@ -31,10 +33,16 @@ void project_listPush(taskData_t data, node_t* head);
 // of resetting the isDone status of completed tasks once the system tick count reaches
 // their release time
 
+// function that tasks will call in order to set their done flag to true
+//void edf_markAsDone();
+
+// this function should traverse edf_taskDataList and find tasks that are ready to release
+void edf_releaseTasks();
+
 // vPortYieldFromISR in port.c gets task handles then feeds them to prvGetThreadFromTask
 // so this needs to return the handle of the task that should run next
 // this should run from the scheduler (probably in vTaskSwitchContext())
-TaskHandle_t edf_getNextTask();
+uint32_t edf_getNextTask();
 	// scan through edf_taskDataList and determine which task has the nearest deadline
 	// should be able to do so using only that list and xTaskGetTickCount()
 	// NOTE: need to make sure xTaskGetTickCount can be ran from inside scheduler
