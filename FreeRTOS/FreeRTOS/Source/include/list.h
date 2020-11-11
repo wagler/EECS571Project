@@ -174,6 +174,8 @@ typedef struct xLIST
 
 static volatile TickType_t xTickCount;
 
+extern volatile unsigned long ulHighFreqTicks;
+
 /*
  * Access macro to set the owner of a list item.  The owner of a list item
  * is the object (usually a TCB) that contains the list item.

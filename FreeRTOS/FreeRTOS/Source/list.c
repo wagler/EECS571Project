@@ -262,7 +262,8 @@ TickType_t xValueOfInsertion;
 		See http://www.freertos.org/FAQHelp.html for more tips.
 		**********************************************************************/
 		
-		for( pxIterator = ( ListItem_t * ) &( pxList->xListEnd ); ( ( pxIterator->pxNext->xItemValue <= xValueOfInsertion ) || ( pxIterator->pxNext->xItemValue > 0xF0000000 && pxIterator->pxNext->xItemValue != 0xFFFFFFFF )); pxIterator = pxIterator->pxNext )
+		//for( pxIterator = ( ListItem_t * ) &( pxList->xListEnd ); ( ( pxIterator->pxNext->xItemValue <= xValueOfInsertion ) || ( pxIterator->pxNext->xItemValue > 0xF0000000 && pxIterator->pxNext->xItemValue != 0xFFFFFFFF )); pxIterator = pxIterator->pxNext )
+		for( pxIterator = ( ListItem_t * ) &( pxList->xListEnd ); ( ( pxIterator->pxNext->xItemValue <= xValueOfInsertion ) || ( pxIterator->pxNext->xItemValue >= ulHighFreqTicks && pxIterator->pxNext->xItemValue <= 0xFFFFFFFF )); pxIterator = pxIterator->pxNext )
 		{
 			/* There is nothing to do here, we are just iterating to the
 			wanted insertion position. */
