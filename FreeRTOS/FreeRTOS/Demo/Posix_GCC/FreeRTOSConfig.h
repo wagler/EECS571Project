@@ -217,4 +217,7 @@ ipconfigUSE_DNS is set to 1 but a DNS server cannot be contacted. */
 /* The UDP port to which print messages are sent. */
 #define configPRINT_PORT	( 15000 )
 
+//To use EDF Algorithm set to 1
+#define configUSE_EDF_SCHEDULER 		1
+
 #endif /* FREERTOS_CONFIG_H */

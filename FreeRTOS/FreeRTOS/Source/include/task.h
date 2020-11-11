@@ -3028,6 +3028,9 @@ TaskHandle_t pvTaskIncrementMutexHeldCount( void ) PRIVILEGED_FUNCTION;
  */
 void vTaskInternalSetTimeOutState( TimeOut_t * const pxTimeOut ) PRIVILEGED_FUNCTION;
 
+#if ( configUSE_EDF_SCHEDULER == 1 )
+			unsigned long task_ADD_DEADLINE( void * );
+#endif
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus

@@ -111,6 +111,22 @@ void vListInsertEnd( List_t * const pxList,
     ( pxList->uxNumberOfItems )++;
 }
 /*-----------------------------------------------------------*/
+//**************************************//
+/*For EDF Scheduler use this insertEnd*/
+#if ( configUSE_EDF_SCHEDULER == 1 )
+void vListEDFInsertEnd( List_t *pxList, ListItem_t *pxNewListItem )
+{
+	if((pxNewListItem->xItemValue  = task_ADD_DEADLINE( pxNewListItem->pvOwner )) > xTickCount ) //NOTE may or may not be ok
+	{
+	vListInsert( pxList, pxNewListItem );
+	}
+	else
+	{
+	vListInsertOverFlow( pxList, pxNewListItem ); 	
+	}
+}
+#endif
+//*************************************//
 
 void vListInsert( List_t * const pxList,
                   ListItem_t * const pxNewListItem )
@@ -206,5 +222,62 @@ UBaseType_t uxListRemove( ListItem_t * const pxItemToRemove )
     ( pxList->uxNumberOfItems )--;
 
     return pxList->uxNumberOfItems;
+}
+/*-----------------------------------------------------------*/
+/**************************EDF***********************************/
+void vListInsertOverFlow( List_t *pxList, ListItem_t *pxNewListItem )
+{
+volatile ListItem_t *pxIterator;
+TickType_t xValueOfInsertion;
+
+	/* Insert the new list item into the list, sorted in ulListItem order. */
+	xValueOfInsertion = pxNewListItem->xItemValue;
+
+	/* If the list already contains a list item with the same item value then
+	the new list item should be placed after it.  This ensures that TCB's which
+	are stored in ready lists (all of which have the same ulListItem value)
+	get an equal share of the CPU.  However, if the xItemValue is the same as
+	the back marker the iteration loop below will not end.  This means we need
+	to guard against this by checking the value first and modifying the
+	algorithm slightly if necessary. */
+	if( xValueOfInsertion == portMAX_DELAY )
+	{
+		pxIterator = pxList->xListEnd.pxPrevious;
+	}
+	else
+	{
+		/* *** NOTE ***********************************************************
+		If you find your application is crashing here then likely causes are:
+			1) Stack overflow -
+			   see http://www.freertos.org/Stacks-and-stack-overflow-checking.html
+			2) Incorrect interrupt priority assignment, especially on Cortex-M3
+			   parts where numerically high priority values denote low actual
+			   interrupt priories, which can seem counter intuitive.  See
+			   configMAX_SYSCALL_INTERRUPT_PRIORITY on http://www.freertos.org/a00110.html
+			3) Calling an API function from within a critical section or when
+			   the scheduler is suspended.
+			4) Using a queue or semaphore before it has been initialised or
+			   before the scheduler has been started (are interrupts firing
+			   before vTaskStartScheduler() has been called?).
+		See http://www.freertos.org/FAQHelp.html for more tips.
+		**********************************************************************/
+		
+		for( pxIterator = ( ListItem_t * ) &( pxList->xListEnd ); ( ( pxIterator->pxNext->xItemValue <= xValueOfInsertion ) || ( pxIterator->pxNext->xItemValue > 0xF0000000 && pxIterator->pxNext->xItemValue != 0xFFFFFFFF )); pxIterator = pxIterator->pxNext )
+		{
+			/* There is nothing to do here, we are just iterating to the
+			wanted insertion position. */
+		}
+	}
+
+	pxNewListItem->pxNext = pxIterator->pxNext;
+	pxNewListItem->pxNext->pxPrevious = ( volatile ListItem_t * ) pxNewListItem;
+	pxNewListItem->pxPrevious = pxIterator;
+	pxIterator->pxNext = ( volatile ListItem_t * ) pxNewListItem;
+
+	/* Remember which list the item is in.  This allows fast removal of the
+	item later. */
+	pxNewListItem->pvContainer = ( void * ) pxList;
+
+	( pxList->uxNumberOfItems )++;
 }
 /*-----------------------------------------------------------*/

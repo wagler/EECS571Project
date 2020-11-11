@@ -216,11 +216,20 @@
  * Place the task represented by pxTCB into the appropriate ready list for
  * the task.  It is inserted at the end of the list.
  */
-#define prvAddTaskToReadyList( pxTCB )                                                                 \
-    traceMOVED_TASK_TO_READY_STATE( pxTCB );                                                           \
-    taskRECORD_READY_PRIORITY( ( pxTCB )->uxPriority );                                                \
-    vListInsertEnd( &( pxReadyTasksLists[ ( pxTCB )->uxPriority ] ), &( ( pxTCB )->xStateListItem ) ); \
-    tracePOST_MOVED_TASK_TO_READY_STATE( pxTCB )
+#if ( configUSE_EDF_SCHEDULER == 0 )
+    #define prvAddTaskToReadyList( pxTCB )                                                                 \
+        traceMOVED_TASK_TO_READY_STATE( pxTCB );                                                           \
+        taskRECORD_READY_PRIORITY( ( pxTCB )->uxPriority );                                                \
+        vListInsertEnd( &( pxReadyTasksLists[ ( pxTCB )->uxPriority ] ), &( ( pxTCB )->xStateListItem ) ); \
+        tracePOST_MOVED_TASK_TO_READY_STATE( pxTCB )
+#endif
+//To use EDF scheduler
+#if ( configUSE_EDF_SCHEDULER == 1 )
+	#define prvAddTaskToReadyQueue( pxTCB )																					\
+	    traceMOVED_TASK_TO_READY_STATE( pxTCB )																				\
+	    taskRECORD_READY_PRIORITY( ( pxTCB )->uxPriority );																	\
+	    vListEDFInsertEnd( &( pxReadyTasksLists[ ( pxTCB )->uxPriority ] ), &( ( pxTCB )->xStateListItem ) )
+#endif
 /*-----------------------------------------------------------*/
 
 /*
@@ -293,6 +302,13 @@ typedef struct tskTaskControlBlock       /* The old naming convention is used to
     #if ( configGENERATE_RUN_TIME_STATS == 1 )
         uint32_t ulRunTimeCounter; /*< Stores the amount of time the task has spent in the Running state. */
     #endif
+
+/*************************************************/
+	#if ( configUSE_EDF_SCHEDULER == 1)
+		UBaseType_t ulDeadline;
+		UBaseType_t ulAbsDeadline;
+	#endif
+/************************************************/
 
     #if ( configUSE_NEWLIB_REENTRANT == 1 )
 
@@ -648,6 +664,12 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB ) PRIVILEGED_FUNCTION;
                 }
             #endif /* tskSTATIC_AND_DYNAMIC_ALLOCATION_POSSIBLE */
 
+//*************************************************************//
+            #if( configUSE_EDF_SCHEDULER == 1 )
+                    pxNewTCB->ulDeadline = *(unsigned long *)pxTaskDefinition->pvParameters;
+            #endif
+//************************************************************//
+
             prvInitialiseNewTask( pxTaskDefinition->pvTaskCode,
                                   pxTaskDefinition->pcName,
                                   ( uint32_t ) pxTaskDefinition->usStackDepth,
@@ -696,6 +718,12 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB ) PRIVILEGED_FUNCTION;
                         pxNewTCB->ucStaticallyAllocated = tskSTATICALLY_ALLOCATED_STACK_ONLY;
                     }
                 #endif /* tskSTATIC_AND_DYNAMIC_ALLOCATION_POSSIBLE */
+
+//*************************************************************//
+                #if( configUSE_EDF_SCHEDULER == 1 )
+                        pxNewTCB->ulDeadline = *(unsigned long *)pxTaskDefinition->pvParameters;
+                #endif
+//************************************************************//
 
                 prvInitialiseNewTask( pxTaskDefinition->pvTaskCode,
                                       pxTaskDefinition->pcName,
@@ -793,6 +821,12 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB ) PRIVILEGED_FUNCTION;
                     pxNewTCB->ucStaticallyAllocated = tskDYNAMICALLY_ALLOCATED_STACK_AND_TCB;
                 }
             #endif /* tskSTATIC_AND_DYNAMIC_ALLOCATION_POSSIBLE */
+
+//*************************************************************//
+			#if( configUSE_EDF_SCHEDULER == 1 )
+					pxNewTCB->ulDeadline = *(unsigned long *)pvParameters;
+			#endif
+//************************************************************//
 
             prvInitialiseNewTask( pxTaskCode, pcName, ( uint32_t ) usStackDepth, pvParameters, uxPriority, pxCreatedTask, pxNewTCB, NULL );
             prvAddNewTaskToReadyList( pxNewTCB );
@@ -5377,3 +5411,14 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
     #endif
 
 #endif /* if ( configINCLUDE_FREERTOS_TASK_C_ADDITIONS_H == 1 ) */
+/*-----------------------------------------------------------*/
+
+//To use EDF Scheduler
+#if ( configUSE_EDF_SCHEDULER == 1 )
+	unsigned long task_ADD_DEADLINE( void * pxTCB )
+	{
+		tskTCB * TempTCB;
+		TempTCB = ( tskTCB * )pxTCB;
+	  return TempTCB->ulAbsDeadline = TempTCB->ulDeadline; //+ ulHighFreqTicks;
+	}
+#endif	

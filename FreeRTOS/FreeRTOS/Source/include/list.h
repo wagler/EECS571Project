@@ -276,6 +276,8 @@ typedef struct xLIST
  * \page listGET_OWNER_OF_NEXT_ENTRY listGET_OWNER_OF_NEXT_ENTRY
  * \ingroup LinkedList
  */
+#if ( configUSE_EDF_SCHEDULER == 0)  
+
 #define listGET_OWNER_OF_NEXT_ENTRY( pxTCB, pxList )                                           \
     {                                                                                          \
         List_t * const pxConstList = ( pxList );                                               \
@@ -289,6 +291,19 @@ typedef struct xLIST
         ( pxTCB ) = ( pxConstList )->pxIndex->pvOwner;                                         \
     }
 
+#endif
+/*********************************************************************/
+/*When EDF Scheduler used use this*/
+#if ( configUSE_EDF_SCHEDULER == 1)   
+
+#define listGET_OWNER_OF_NEXT_ENTRY( pxTCB, pxList )									\
+{																						\
+	/*For EDF select the first task in the ready list */  \
+	( pxTCB ) = listGET_OWNER_OF_HEAD_ENTRY( pxList );										\
+}
+
+#endif
+/*********************************************************************/
 
 /*
  * Access function to obtain the owner of the first entry in a list.  Lists
@@ -407,6 +422,10 @@ void vListInsertEnd( List_t * const pxList,
  * \ingroup LinkedList
  */
 UBaseType_t uxListRemove( ListItem_t * const pxItemToRemove ) PRIVILEGED_FUNCTION;
+
+void vListEDFInsertEnd( List_t *pxList, ListItem_t *pxNewListItem );
+
+void vListInsertOverFlow( List_t *pxList, ListItem_t *pxNewListItem );
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
