@@ -67,6 +67,11 @@
 
 #define SIG_RESUME SIGUSR1
 
+//****************************************************//
+//to get more ticks
+volatile unsigned long ulHighFreqTicks = 0xFFFFF000;
+//***************************************************//
+
 typedef struct THREAD
 {
 	pthread_t pthread;
@@ -360,30 +365,35 @@ uint64_t xExpectedTicks;
 
 	uxCriticalNesting++; /* Signals are blocked in this signal handler. */
 
-#if ( configUSE_PREEMPTION == 1 )
-	pxThreadToSuspend = prvGetThreadFromTask( xTaskGetCurrentTaskHandle() );
-#endif
+if( ulHighFreqTicks++ % 10 == 0 )
+{
 
-	/* Tick Increment, accounting for any lost signals or drift in
-	 * the timer. */
-/*
- *      Comment code to adjust timing according to full demo requirements
- *      xExpectedTicks = (prvGetTimeNs() - prvStartTimeNs)
- *		/ (portTICK_RATE_MICROSECONDS * 1000);
- * do { */
-		xTaskIncrementTick();
-/*		prvTickCount++;
- *	} while (prvTickCount < xExpectedTicks);
-*/
+	#if ( configUSE_PREEMPTION == 1 )
+		pxThreadToSuspend = prvGetThreadFromTask( xTaskGetCurrentTaskHandle() );
+	#endif
 
-#if ( configUSE_PREEMPTION == 1 )
-	/* Select Next Task. */
-	vTaskSwitchContext();
+		/* Tick Increment, accounting for any lost signals or drift in
+		* the timer. */
+	/*
+	*      Comment code to adjust timing according to full demo requirements
+	*      xExpectedTicks = (prvGetTimeNs() - prvStartTimeNs)
+	*		/ (portTICK_RATE_MICROSECONDS * 1000);
+	* do { */
+			xTaskIncrementTick();
+	/*		prvTickCount++;
+	*	} while (prvTickCount < xExpectedTicks);
+	*/
 
-	pxThreadToResume = prvGetThreadFromTask( xTaskGetCurrentTaskHandle() );
+	#if ( configUSE_PREEMPTION == 1 )
+		/* Select Next Task. */
+		vTaskSwitchContext();
 
-	prvSwitchThread(pxThreadToResume, pxThreadToSuspend);
-#endif
+		pxThreadToResume = prvGetThreadFromTask( xTaskGetCurrentTaskHandle() );
+
+		prvSwitchThread(pxThreadToResume, pxThreadToSuspend);
+	#endif
+
+}
 
 	uxCriticalNesting--;
 }

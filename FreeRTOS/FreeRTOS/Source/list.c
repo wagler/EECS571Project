@@ -116,7 +116,7 @@ void vListInsertEnd( List_t * const pxList,
 #if ( configUSE_EDF_SCHEDULER == 1 )
 void vListEDFInsertEnd( List_t *pxList, ListItem_t *pxNewListItem )
 {
-	if((pxNewListItem->xItemValue  = task_ADD_DEADLINE( pxNewListItem->pvOwner )) > xTickCount ) //NOTE may or may not be ok
+	if((pxNewListItem->xItemValue  = task_ADD_DEADLINE( pxNewListItem->pvOwner )) > ulHighFreqTicks )
 	{
 	vListInsert( pxList, pxNewListItem );
 	}
