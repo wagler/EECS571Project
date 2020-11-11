@@ -225,7 +225,7 @@
 #endif
 //To use EDF scheduler
 #if ( configUSE_EDF_SCHEDULER == 1 )
-	#define prvAddTaskToReadyQueue( pxTCB )																					\
+	#define prvAddTaskToReadyList( pxTCB )																					\
 	    traceMOVED_TASK_TO_READY_STATE( pxTCB )																				\
 	    taskRECORD_READY_PRIORITY( ( pxTCB )->uxPriority );																	\
 	    vListEDFInsertEnd( &( pxReadyTasksLists[ ( pxTCB )->uxPriority ] ), &( ( pxTCB )->xStateListItem ) )
