@@ -5419,6 +5419,6 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
 	{
 		tskTCB * TempTCB;
 		TempTCB = ( tskTCB * )pxTCB;
-	  return TempTCB->ulAbsDeadline = TempTCB->ulDeadline; //+ ulHighFreqTicks;
+	  return TempTCB->ulAbsDeadline = TempTCB->ulDeadline + xTickCount; 
 	}
 #endif	

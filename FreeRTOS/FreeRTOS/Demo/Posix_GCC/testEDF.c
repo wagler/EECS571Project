@@ -11,7 +11,6 @@
 #include "console.h"
 
 /*-----------------------------------------------------------*/
-unsigned long ulTaskNumber[ configEXPECTED_NO_RUNNING_TASKS ];
 
 /*-----------------------------------------------------------*/
 xTaskHandle xT1;
@@ -28,13 +27,18 @@ const unsigned long dT1 = 100;
 const unsigned long dT2 = 70;
 const unsigned long dT3 = 50;
 const unsigned long dT4 = 400;
-int main(void)
+
+int main_blinky(void)
 {
-		
-    xTaskCreate( T1, ( signed char * ) "T1", configMINIMAL_STACK_SIZE, (void *)&dT1, 1 , &xT1 );		
+	printf("running\n");		
+          xTaskCreate( T1, ( signed char * ) "T1", configMINIMAL_STACK_SIZE, (void *)&dT1, 1 , &xT1 );		
+	printf("running\n");		
 	  xTaskCreate( T2, ( signed char * ) "T2", configMINIMAL_STACK_SIZE, (void *)&dT2, 1 , &xT2 );
+	printf("running\n");		
   	xTaskCreate( T3, ( signed char * ) "T3", configMINIMAL_STACK_SIZE, (void *)&dT3, 1 , &xT3 );
+	printf("running\n");		
 	  xTaskCreate( T4, ( signed char * ) "T4", configMINIMAL_STACK_SIZE, (void *)&dT4, 1 , &xT4 );
+	printf("running\n");		
 		/* Start the tasks running. */
 	vTaskStartScheduler();
 	
