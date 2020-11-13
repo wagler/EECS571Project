@@ -30,11 +30,11 @@ const unsigned long dT4 = 400;
 
 int main_blinky(void)
 {
-          xTaskCreate( T1, ( signed char * ) "T1", configMINIMAL_STACK_SIZE, (void *)&dT1, 1 , &xT1 );		
-	  xTaskCreate( T2, ( signed char * ) "T2", configMINIMAL_STACK_SIZE, (void *)&dT2, 1 , &xT2 );
-  	  xTaskCreate( T3, ( signed char * ) "T3", configMINIMAL_STACK_SIZE, (void *)&dT3, 1 , &xT3 );
-	  xTaskCreate( T4, ( signed char * ) "T4", configMINIMAL_STACK_SIZE, (void *)&dT4, 1 , &xT4 );
-		/* Start the tasks running. */
+	xTaskCreate( T1, ( signed char * ) "T1", configMINIMAL_STACK_SIZE, (void *)&dT1, 1 , &xT1 );		
+	xTaskCreate( T2, ( signed char * ) "T2", configMINIMAL_STACK_SIZE, (void *)&dT2, 1 , &xT2 );
+	xTaskCreate( T3, ( signed char * ) "T3", configMINIMAL_STACK_SIZE, (void *)&dT3, 1 , &xT3 );
+	xTaskCreate( T4, ( signed char * ) "T4", configMINIMAL_STACK_SIZE, (void *)&dT4, 1 , &xT4 );
+	/* Start the tasks running. */
 	vTaskStartScheduler();
 	
 	for( ;; );
@@ -48,8 +48,6 @@ static void T1( void *pvParameters )
 	unsigned int j = 0;
 	while(1)
 	{	
-		//i = 0xFFFFFFFE + 0xA;
-		//printf("%x\n", i);
 		printf("T1 Executing %lu job %d\n", xTaskGetTickCount(), j);
 		++j;
 	 	for(i = 0;i < 9000; i++);
@@ -94,10 +92,6 @@ static void T4( void *pvParameters )
 	 	printf("T4 Executing %lu job %d\n", xTaskGetTickCount(), j);
 	 	++j;
 	 	for(i = 0;i < 9000; i++);
-		//char* buf = (char*)malloc(500);
-		//vTaskGetRunTimeStats(buf);
-		//printf(buf);
 		vTaskDelay( 400 / portTICK_RATE_MS);
-		//free(buf);
 	}
 }

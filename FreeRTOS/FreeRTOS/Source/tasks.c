@@ -1372,10 +1372,11 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB )
             {
                 traceTASK_DELAY();
 
-		// PRINT RUNTIME STATS EDF
-		TCB_t * currentTCB = prvGetTCBFromHandle(xTaskGetCurrentTaskHandle());
-		currentTCB->ulRunTimeCounter++;
-		printf("\ttimes completed: %d\n", currentTCB->ulRunTimeCounter);
+		        // PRINT RUNTIME STATS EDF
+		        //TCB_t * currentTCB = prvGetTCBFromHandle(xTaskGetCurrentTaskHandle());
+		        //currentTCB->ulRunTimeCounter++;
+		        printf("\tRuntime: %d\n", pxCurrentTCB->ulRunTimeCounter);
+                pxCurrentTCB->ulRunTimeCounter = 0;
 
                 /* A task that is removed from the event list while the
                  * scheduler is suspended will not get placed in the ready

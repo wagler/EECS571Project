@@ -1,0 +1,28 @@
+The user will define "checkpointed" tasks and will define a "backup" task for these checkpointed tasks
+
+Checkpointed tasks may or may not finish before their deadline. The user will provide a "completion deadline" at which point, if the task is not done, it will be squashed and rolled back to its checkpoint and the backup will be run instead
+	This will rely on a saveCheckpoint function that will store the task's stack. This function will be called at the beginning of each job (each execution of the while(1) loop)
+
+the TCB_t type will be amended with the necessary fields
+	a TaskHandle for the backup task
+	an integer type for the completion deadline
+
+The scheduling of the checkpointed and backup tasks will need to be handled very carefully
+The backup task should be IMMEDIATELY behind the checkpointed task on the ready and delay queues
+When we squash a late checkpointed task, we can basically call vTaskDelay and let the scheduler select the next task (which should be the backup)
+	the tick value given to vTaskDelay should be taskDeadline - completionDeadline 
+when the backup completes, its delay value should be such that it goes onto the delay queue directly behind the checkpointed task
+
+ulRuntimeCounter will be used to track if the checkpointed task is near/at its completion deadline
+
+
+checkpoint starts running:
+	case 1: it finishes on time
+		it moves to the delay queue as normal
+		the backup task must be moved to the delay queue before it starts running (so it must be delayed at the same time as the checkpointed task completes)
+		the backup task must be given a delay value such that it sits behind the checkpointed task on the queue
+
+	case 2: it does not finish by its completion deadline
+		move it to the delay queue with a delay such that it will release at the correct time
+		scheduler should immediately start running the backup
+		once scheduler completes, move it to the delay queue with delay value such that it is behind the checkpointed task on the queue
