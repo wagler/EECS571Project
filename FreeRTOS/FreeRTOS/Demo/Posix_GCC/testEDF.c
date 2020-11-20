@@ -48,9 +48,9 @@ static void T1( void *pvParameters )
 	unsigned int j = 0;
 	while(1)
 	{	
-		printf("T1 Executing %lu job %d\n", xTaskGetTickCount(), j);
+		printf("T1 Executing %lu deadline: %d job: %d\n", xTaskGetTickCount(), ((xTaskGetTickCount() / dT1) + 1) * dT1, j);
 		++j;
-	 	for(i = 0;i < 9000; i++);
+	 	for(i = 0;i < 9000000; i++);
 	 	vTaskDelay( 100 / portTICK_RATE_MS );	
   }
 }
@@ -62,9 +62,9 @@ static void T2( void *pvParameters )
 	unsigned int j = 0;
 	while(1)
 	{
-	 	printf("T2 Executing %lu job %d\n", xTaskGetTickCount(), j);
+	 	printf("T2 Executing %lu deadline: %d job: %d\n", xTaskGetTickCount(), ((xTaskGetTickCount() / dT2) + 1) * dT2, j);
 	 	++j;
-		for(i = 0;i < 9000; i++);
+		for(i = 0;i < 90000000; i++);
 		vTaskDelay( 200 / portTICK_RATE_MS);
 	}
 }
@@ -75,9 +75,9 @@ static void T3( void *pvParameters )
 	unsigned int j = 0;
 	while(1)
 	{	
-	 	printf("T3 Executing %lu job %d\n", xTaskGetTickCount(), j);
+	 	printf("T3 Executing %lu deadline: %d job: %d\n", xTaskGetTickCount(), ((xTaskGetTickCount() / dT3) + 1) * dT3, j);
 	 	++j;
-	 	for(i = 0;i < 9000; i++);
+	 	for(i = 0;i < 90000000; i++);
 	 	vTaskDelay( 300 / portTICK_RATE_MS );	
   }
 }
@@ -89,9 +89,9 @@ static void T4( void *pvParameters )
 	unsigned int j = 0;
 	while(1)
 	{
-	 	printf("T4 Executing %lu job %d\n", xTaskGetTickCount(), j);
+	 	printf("T4 Executing %lu deadline: %d job: %d\n", xTaskGetTickCount(), ((xTaskGetTickCount() / dT4) + 1) * dT4, j);
 	 	++j;
-	 	for(i = 0;i < 9000; i++);
+	 	for(i = 0;i < 90000000; i++);
 		vTaskDelay( 400 / portTICK_RATE_MS);
 	}
 }

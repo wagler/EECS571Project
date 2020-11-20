@@ -3049,7 +3049,7 @@ void vTaskSwitchContext( void )
                 #ifdef portALT_GET_RUN_TIME_COUNTER_VALUE
                     portALT_GET_RUN_TIME_COUNTER_VALUE( ulTotalRunTime );
                 #else
-                    ulTotalRunTime = portGET_RUN_TIME_COUNTER_VALUE();
+                    ulTotalRunTime = ulHighFreqTicks;//portGET_RUN_TIME_COUNTER_VALUE();
                 #endif
 
                 /* Add the amount of time the task has been running to the
@@ -3068,7 +3068,7 @@ void vTaskSwitchContext( void )
                     mtCOVERAGE_TEST_MARKER();
                 }
 
-                ulTaskSwitchedInTime = ulTotalRunTime;
+                ulTaskSwitchedInTime = ulHighFreqTicks;//ulTotalRunTime;
             }
         #endif /* configGENERATE_RUN_TIME_STATS */
 
@@ -5326,7 +5326,14 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
                 /* Calculate the time at which the task should be woken if the event
                  * does not occur.  This may overflow but this doesn't matter, the
                  * kernel will manage it correctly. */
-                xTimeToWake = xConstTickCount + xTicksToWait;
+                //xTimeToWake = xConstTickCount + xTicksToWait;
+
+/******** EDF ********/
+                //makes sure that tasks release at fixed frequency, NOT based on when they complete
+                xTimeToWake = (xConstTickCount / pxCurrentTCB->ulDeadline) * pxCurrentTCB->ulDeadline;
+                xTimeToWake += pxCurrentTCB->ulDeadline;
+                //printf("\t\t\twake time 1: %lu\n", xTimeToWake);
+/******** EDF ********/
 
                 /* The list item will be inserted in wake time order. */
                 listSET_LIST_ITEM_VALUE( &( pxCurrentTCB->xStateListItem ), xTimeToWake );
@@ -5362,7 +5369,14 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
             /* Calculate the time at which the task should be woken if the event
              * does not occur.  This may overflow but this doesn't matter, the kernel
              * will manage it correctly. */
-            xTimeToWake = xConstTickCount + xTicksToWait;
+            //xTimeToWake = xConstTickCount + xTicksToWait;
+            
+/******** EDF ********/
+            //makes sure that tasks release at fixed frequency, NOT based on when they complete
+            xTimeToWake = (xConstTickCount / pxCurrentTCB->ulDeadline) * pxCurrentTCB->ulDeadline;
+            xTimeToWake += pxCurrentTCB->ulDeadline;
+            //printf("\t\t\twake time 2: %lu\n", xTimeToWake);
+/******** EDF ********/
 
             /* The list item will be inserted in wake time order. */
             listSET_LIST_ITEM_VALUE( &( pxCurrentTCB->xStateListItem ), xTimeToWake );
