@@ -73,7 +73,7 @@ static void T2( void *pvParameters )
 	{
 	 	printf("T2 Executing %lu deadline: %d job: %d\n", xTaskGetTickCount(), ((xTaskGetTickCount() / dT2) + 1) * dT2, j);
 	 	++j;
-		for(i = 0;i < 90000000; i++);
+		for(i = 0;i < 900000000; i++);
 		vTaskDelay( 200 / portTICK_RATE_MS);
 	}
 }

@@ -72,6 +72,12 @@
 volatile unsigned long ulHighFreqTicks = 0xFFFFF000;
 //***************************************************//
 
+/**********************************************/
+// FOR CHECKPOINTED TASKS
+extern TCB_t * volatile pxCurrentTCB;
+//extern TickType_t volatile xTickCount;
+/**********************************************/
+
 typedef struct THREAD
 {
 	pthread_t pthread;
@@ -380,6 +386,12 @@ if( ulHighFreqTicks++ % 10 == 0 )
 	*		/ (portTICK_RATE_MICROSECONDS * 1000);
 	* do { */
 			xTaskIncrementTick();
+			if(pxCurrentTCB->isCheckpointedTask == pdTRUE && pxCurrentTCB->ulRunTimeCounter / 10 >= pxCurrentTCB->runtimeCutoff) 
+			{
+				printf("\t\t\tCUTTING OFF AT RUNTIME %lu\n", pxCurrentTCB->ulRunTimeCounter);
+				vTaskDelay(200 / portTICK_RATE_MS);
+				//printf("\t\t\t\tDEADLINE %lu CURRENT TIME %lu\n", pxCurrentTCB->runtimeCutoff, pxCurrentTCB->ulRunTimeCounter);
+			}
 	/*		prvTickCount++;
 	*	} while (prvTickCount < xExpectedTicks);
 	*/
