@@ -1173,9 +1173,13 @@ typedef struct xSTATIC_TCB
         uint32_t ulDummy16;
     #endif
     #if ( configUSE_EDF_SCHEDULER == 1 )
-	UBaseType_t dummy23;
+	    UBaseType_t dummy23;
         UBaseType_t dummy24;
     #endif
+        /* FOR MODIFIED EDF */
+        BaseType_t dummy25;
+        void * dummy26;
+        UBaseType_t dummy27;
     #if ( configUSE_NEWLIB_REENTRANT == 1 )
         struct  _reent xDummy17;
     #endif

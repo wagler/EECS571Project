@@ -345,6 +345,21 @@ typedef enum
                             TaskHandle_t * const pxCreatedTask ) PRIVILEGED_FUNCTION;
 #endif
 
+/***************************************/
+    // FOR CHECKPOINTED MODIFIED EDF
+    BaseType_t xTaskCreateCheckpointed( TaskFunction_t pxTaskCode,
+                            const char * const pcName, /*lint !e971 Unqualified char types are allowed for strings and single characters only. */
+                            const configSTACK_DEPTH_TYPE usStackDepth,
+                            void * const pvParameters,
+                            UBaseType_t uxPriority,
+                            TaskHandle_t * const pxCreatedTask,
+                            BaseType_t isCheckpointedTask,
+                            TaskHandle_t * const backupTaskHandle,
+                            UBaseType_t runtimeCutoff );
+
+/***************************************/
+
+
 /**
  * task. h
  * <pre>
