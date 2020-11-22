@@ -858,7 +858,8 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB ) PRIVILEGED_FUNCTION;
                             TaskHandle_t * const pxCreatedTask,
                             BaseType_t isCheckpointedTask,
                             TaskHandle_t * const backupTaskHandle,
-                            UBaseType_t runtimeCutoff )
+                            UBaseType_t runtimeCutoff,
+                            ucontext_t * backupContext )
     {
         TCB_t * pxNewTCB;
         BaseType_t xReturn;
@@ -929,7 +930,7 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB ) PRIVILEGED_FUNCTION;
                 }
             #endif /* tskSTATIC_AND_DYNAMIC_ALLOCATION_POSSIBLE */
 
-//*************************************************************//
+//*************************** EDF **********************************//
 			#if( configUSE_EDF_SCHEDULER == 1 )
 					pxNewTCB->ulDeadline = *(unsigned long *)pvParameters;
 			#endif
@@ -940,16 +941,20 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB ) PRIVILEGED_FUNCTION;
                 pxNewTCB->isCheckpointedTask = pdTRUE;
                 pxNewTCB->backupTaskHandle = backupTaskHandle;
                 pxNewTCB->runtimeCutoff = runtimeCutoff;
-                printf("TASK CREATED: %d %d %lu\n", pxNewTCB->isCheckpointedTask, pxNewTCB->backupTaskHandle, pxNewTCB->runtimeCutoff);
+                pxNewTCB->wasSquashed = pdFALSE;
+                pxNewTCB->backupContext = backupContext;
+                //printf("TASK CREATED: %d %d %lu\n", pxNewTCB->isCheckpointedTask, pxNewTCB->backupTaskHandle, pxNewTCB->runtimeCutoff);
             }
             else
             {
                 pxNewTCB->isCheckpointedTask = pdFALSE;
                 pxNewTCB->backupTaskHandle = NULL;
                 pxNewTCB->runtimeCutoff = *(unsigned long *)pvParameters; // just use deadline
-                printf("TASK CREATED: %d %d %lu\n", pxNewTCB->isCheckpointedTask, pxNewTCB->backupTaskHandle, pxNewTCB->runtimeCutoff);
+                pxNewTCB->wasSquashed = pdFALSE;
+                pxNewTCB->backupContext = NULL;
+                //printf("TASK CREATED: %d %d %lu\n", pxNewTCB->isCheckpointedTask, pxNewTCB->backupTaskHandle, pxNewTCB->runtimeCutoff);
             }            
-//************************************************************//
+//*************************** EDF **********************************//
 
             prvInitialiseNewTask( pxTaskCode, pcName, ( uint32_t ) usStackDepth, pvParameters, uxPriority, pxCreatedTask, pxNewTCB, NULL );
             prvAddNewTaskToReadyList( pxNewTCB );
@@ -1522,11 +1527,24 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB )
         if( xAlreadyYielded == pdFALSE )
         {
             portYIELD_WITHIN_API();
+            // portYIELD_WITHIN_API is defined as portYIELD
+            // that is defined as vPortYieldFromISR in port.c
         }
         else
         {
             mtCOVERAGE_TEST_MARKER();
         }
+
+/******************************** EDF *********************************/
+        // if this thread was squashed last time it ran, it needs to setcontext
+        // here to reload the checkpoint
+        if(pxCurrentTCB->wasSquashed == pdTRUE) 
+        {
+            pxCurrentTCB->wasSquashed = pdFALSE;
+            printf("RESETTING CONTEXT %lu\n", pxCurrentTCB->ulDeadline);
+            setcontext(pxCurrentTCB->backupContext);
+        }
+/******************************** EDF *********************************/
     }
 
 #endif /* INCLUDE_vTaskDelay */

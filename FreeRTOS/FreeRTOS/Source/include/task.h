@@ -33,6 +33,8 @@
 #endif
 
 #include "list.h"
+//#include <pthread.h>
+#include <ucontext.h>
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
@@ -355,7 +357,8 @@ typedef enum
                             TaskHandle_t * const pxCreatedTask,
                             BaseType_t isCheckpointedTask,
                             TaskHandle_t * const backupTaskHandle,
-                            UBaseType_t runtimeCutoff );
+                            UBaseType_t runtimeCutoff,
+                            ucontext_t * backupContext );
 
 /***************************************/
 
@@ -3110,6 +3113,8 @@ typedef struct tskTaskControlBlock       /* The old naming convention is used to
         BaseType_t isCheckpointedTask;
         TaskHandle_t * backupTaskHandle; // handle for the dedicated backup task
         UBaseType_t runtimeCutoff; // the runtime at which the task should be squashed
+        BaseType_t wasSquashed; // was this task squashed last time it ran?
+        ucontext_t * backupContext; // pointer to checkpointed thread context
 /************************************************/
 
     #if ( configUSE_NEWLIB_REENTRANT == 1 )

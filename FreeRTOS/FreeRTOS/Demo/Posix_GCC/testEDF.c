@@ -20,20 +20,20 @@ static void T2( void *pvParameters );
 static void T3( void *pvParameters );
 static void T4( void *pvParameters );
 
-
-
 const unsigned long dT1 = 100;
 const unsigned long dT2 = 200;
 const unsigned long dT3 = 300;
 const unsigned long dT4 = 400;
 
+ucontext_t backupContext;
+
 int main_blinky(void)
 {
 	/********************************/
 	// FOR TESTING BACKUP TASKS
-	xTaskCreateCheckpointed( T1, ( signed char * ) "T1", configMINIMAL_STACK_SIZE, (void *)&dT1, 1, &xT1, pdFALSE, NULL, dT1); // backup for T2		
-	xTaskCreateCheckpointed( T2, ( signed char * ) "T2", configMINIMAL_STACK_SIZE, (void *)&dT2, 1, &xT2, pdTRUE, &xT1, dT2/2 );
-	xTaskCreateCheckpointed( T3, ( signed char * ) "T3", configMINIMAL_STACK_SIZE, (void *)&dT3, 1, &xT3, pdFALSE, NULL, dT3 );
+	xTaskCreateCheckpointed( T1, ( signed char * ) "T1", configMINIMAL_STACK_SIZE, (void *)&dT1, 1, &xT1, pdFALSE, NULL, dT1, NULL); // backup for T2		
+	xTaskCreateCheckpointed( T2, ( signed char * ) "T2", configMINIMAL_STACK_SIZE, (void *)&dT2, 1, &xT2, pdTRUE, &xT1, dT2/2, &backupContext);
+	xTaskCreateCheckpointed( T3, ( signed char * ) "T3", configMINIMAL_STACK_SIZE, (void *)&dT3, 1, &xT3, pdFALSE, NULL, dT3, NULL);
 	/********************************/
 
 	/*
@@ -71,7 +71,8 @@ static void T2( void *pvParameters )
 	unsigned int j = 0;
 	while(1)
 	{
-	 	printf("T2 Executing %lu deadline: %d job: %d\n", xTaskGetTickCount(), ((xTaskGetTickCount() / dT2) + 1) * dT2, j);
+	 	getcontext(&backupContext);
+		printf("T2 Executing %lu deadline: %d job: %d\n", xTaskGetTickCount(), ((xTaskGetTickCount() / dT2) + 1) * dT2, j);
 	 	++j;
 		for(i = 0;i < 900000000; i++);
 		vTaskDelay( 200 / portTICK_RATE_MS);

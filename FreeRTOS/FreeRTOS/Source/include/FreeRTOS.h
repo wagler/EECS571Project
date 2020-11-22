@@ -1176,10 +1176,13 @@ typedef struct xSTATIC_TCB
 	    UBaseType_t dummy23;
         UBaseType_t dummy24;
     #endif
-        /* FOR MODIFIED EDF */
+/****************** EDF *********************/
         BaseType_t dummy25;
         void * dummy26;
         UBaseType_t dummy27;
+        BaseType_t dummy28;
+        void * dummy29;
+/****************** EDF *********************/
     #if ( configUSE_NEWLIB_REENTRANT == 1 )
         struct  _reent xDummy17;
     #endif
