@@ -388,8 +388,10 @@ if( ulHighFreqTicks++ % 10 == 0 )
 			xTaskIncrementTick();
 			if(pxCurrentTCB->isCheckpointedTask == pdTRUE && pxCurrentTCB->ulRunTimeCounter / 10 >= pxCurrentTCB->runtimeCutoff) 
 			{
-				printf("\t\t\tCUTTING OFF AT RUNTIME %lu\n", pxCurrentTCB->ulRunTimeCounter);
+				printf("\t\t\tCUTTING OFF AT RUNTIME %lu\n", pxCurrentTCB->ulRunTimeCounter / 10);
 				pxCurrentTCB->wasSquashed = pdTRUE;
+
+				vTaskResume(*pxCurrentTCB->backupTaskHandle);
 				vTaskDelay(200 / portTICK_RATE_MS);
 				//printf("\t\t\t\tDEADLINE %lu CURRENT TIME %lu\n", pxCurrentTCB->runtimeCutoff, pxCurrentTCB->ulRunTimeCounter);
 			}

@@ -943,7 +943,6 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB ) PRIVILEGED_FUNCTION;
                 pxNewTCB->runtimeCutoff = runtimeCutoff;
                 pxNewTCB->wasSquashed = pdFALSE;
                 pxNewTCB->backupContext = backupContext;
-                //printf("TASK CREATED: %d %d %lu\n", pxNewTCB->isCheckpointedTask, pxNewTCB->backupTaskHandle, pxNewTCB->runtimeCutoff);
             }
             else
             {
@@ -952,7 +951,6 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB ) PRIVILEGED_FUNCTION;
                 pxNewTCB->runtimeCutoff = *(unsigned long *)pvParameters; // just use deadline
                 pxNewTCB->wasSquashed = pdFALSE;
                 pxNewTCB->backupContext = NULL;
-                //printf("TASK CREATED: %d %d %lu\n", pxNewTCB->isCheckpointedTask, pxNewTCB->backupTaskHandle, pxNewTCB->runtimeCutoff);
             }            
 //*************************** EDF **********************************//
 
@@ -1500,11 +1498,13 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB )
             {
                 traceTASK_DELAY();
 
+/****************** EDF *********************/
 		        // PRINT RUNTIME STATS EDF
 		        //TCB_t * currentTCB = prvGetTCBFromHandle(xTaskGetCurrentTaskHandle());
 		        //currentTCB->ulRunTimeCounter++;
-		        printf("\tRuntime: %d\n", pxCurrentTCB->ulRunTimeCounter);
+		        printf("\tRuntime: %d\n", pxCurrentTCB->ulRunTimeCounter / 10);
                 pxCurrentTCB->ulRunTimeCounter = 0;
+/****************** EDF *********************/
 
                 /* A task that is removed from the event list while the
                  * scheduler is suspended will not get placed in the ready
@@ -1993,7 +1993,7 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB )
 
         /* It does not make sense to check if the calling task is suspended. */
         configASSERT( xTask );
-
+        
         /* Is the task being resumed actually in the suspended list? */
         if( listIS_CONTAINED_WITHIN( &xSuspendedTaskList, &( pxTCB->xStateListItem ) ) != pdFALSE )
         {
@@ -5519,7 +5519,6 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
             //makes sure that tasks release at fixed frequency, NOT based on when they complete
             xTimeToWake = (xConstTickCount / pxCurrentTCB->ulDeadline) * pxCurrentTCB->ulDeadline;
             xTimeToWake += pxCurrentTCB->ulDeadline;
-            //printf("\t\t\twake time 2: %lu\n", xTimeToWake);
 /******** EDF ********/
 
             /* The list item will be inserted in wake time order. */

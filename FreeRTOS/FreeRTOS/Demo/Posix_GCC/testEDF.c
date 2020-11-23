@@ -20,7 +20,7 @@ static void T2( void *pvParameters );
 static void T3( void *pvParameters );
 static void T4( void *pvParameters );
 
-const unsigned long dT1 = 100;
+const unsigned long dT1 = 200;
 const unsigned long dT2 = 200;
 const unsigned long dT3 = 300;
 const unsigned long dT4 = 400;
@@ -55,12 +55,15 @@ static void T1( void *pvParameters )
 {
 	unsigned int i = 0;
 	unsigned int j = 0;
+	printf("T1 Started, about to suspend...\n", xT1);
+	vTaskSuspend(xT1); // self-suspend
 	while(1)
 	{	
 		printf("T1 Executing %lu deadline: %d job: %d\n", xTaskGetTickCount(), ((xTaskGetTickCount() / dT1) + 1) * dT1, j);
 		++j;
 	 	for(i = 0;i < 9000000; i++);
-	 	vTaskDelay( 100 / portTICK_RATE_MS );	
+	 	vTaskSuspend(xT1); // self-suspend
+		//vTaskDelay( 100 / portTICK_RATE_MS );	
   }
 }
 
@@ -71,10 +74,12 @@ static void T2( void *pvParameters )
 	unsigned int j = 0;
 	while(1)
 	{
-	 	getcontext(&backupContext);
-		printf("T2 Executing %lu deadline: %d job: %d\n", xTaskGetTickCount(), ((xTaskGetTickCount() / dT2) + 1) * dT2, j);
+		getcontext(&backupContext);
+		int itervar = 90000000;
+		itervar += (rand() % 10) * itervar;
+		printf("T2 Executing %lu deadline: %d job: %d ITER: %d\n", xTaskGetTickCount(), ((xTaskGetTickCount() / dT2) + 1) * dT2, j, itervar);
 	 	++j;
-		for(i = 0;i < 900000000; i++);
+		for(i = 0;i < itervar; i++);
 		vTaskDelay( 200 / portTICK_RATE_MS);
 	}
 }
