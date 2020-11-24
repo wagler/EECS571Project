@@ -10,3 +10,8 @@ runtime,period,utilization
 1.1243,33,0.0340697
 
 Keep in mind that the UUniFast algorithm will generate task utilizations by pulling values from a uniform distribution centered at the specified mean utilization. The task periods will also be generated from a uniform distribution.
+
+Example Usage:
+./UUniFast 10 10 0.95 10 50 tasksets.txt
+
+This generates 10 task sets, each with 10 tasks. The mean utilization will be 0.95, in each task set. The task periods will be chosen from a uniform distribution with range [10,50]. The resulting tasks will be output to the file 'tasksets.txt'
