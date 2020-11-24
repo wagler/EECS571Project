@@ -22,7 +22,7 @@ using namespace std;
     
     while (set_count < num_sets) {
         sumU = U_mean;
-        for (int i = 1; i < num_tasks; i++) {
+        for (size_t i = 1; i < num_tasks; i++) {
             // Generates a random float in range [0.0,1.0]
             r = (float) rand() / (float) RAND_MAX;
             nextSumU = sumU * pow(r, (1.0/(num_tasks-i)) );
@@ -85,6 +85,7 @@ int main(int argv, char** argc) {
     if (argv != 7) {
         cout << "Must provide number of task sets, number of tasks per set, mean task set utilization, minimum task period, maximum task period, and an output file path." << endl;
         cout << "UUniFast [num sets] [num tasks] [mean U] [min period] [max period] [output path]" << endl;
+
         return 1;
     }
 
@@ -109,12 +110,16 @@ int main(int argv, char** argc) {
     // Write data to file. 
     // Each line will represent a task with format "runtime,period\n"
     // Blank lines will seperate task sets
+    size_t idx;
     ofstream outfile (filepath);
     if (outfile.is_open()) {
         outfile << "runtime,period,utilization" << endl;
-        for (size_t i = 0; i < num_sets*num_tasks; i++) {
-            outfile << runtimes[i] << "," << periods[i] << "," << utilizations[i] << "\n";
-            if (i % num_sets == 0 && i!=0) outfile << "\n";
+        for (size_t i = 0; i < num_sets; i++) {
+            for (size_t j = 0; j < num_tasks; j++) {
+                idx = i*num_tasks + j;
+                outfile << runtimes[idx] << "," << periods[idx] << "," << utilizations[idx] << "\n";
+            }
+            outfile << "\n";
         }
         outfile.close();
     }
