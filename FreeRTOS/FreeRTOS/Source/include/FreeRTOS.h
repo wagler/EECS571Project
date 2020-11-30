@@ -32,6 +32,8 @@
  */
 #include <stddef.h>
 
+#include <pthread.h>
+
 /*
  * If stdint.h cannot be located then:
  *   + If using GCC ensure the -nostdint options is *not* being used.
@@ -1182,6 +1184,8 @@ typedef struct xSTATIC_TCB
         UBaseType_t dummy27;
         BaseType_t dummy28;
         void * dummy29;
+
+        void * dummy30;
 /****************** EDF *********************/
     #if ( configUSE_NEWLIB_REENTRANT == 1 )
         struct  _reent xDummy17;
@@ -1323,6 +1327,15 @@ typedef struct xSTATIC_STREAM_BUFFER
         UBaseType_t uxDummy4;
     #endif
 } StaticStreamBuffer_t;
+
+typedef struct THREAD
+{
+	pthread_t pthread;
+	pdTASK_CODE pxCode;
+	void *pvParams;
+	BaseType_t xDying;
+	struct event *ev;
+} Thread_t;
 
 /* Message buffers are built on stream buffers. */
 typedef StaticStreamBuffer_t StaticMessageBuffer_t;

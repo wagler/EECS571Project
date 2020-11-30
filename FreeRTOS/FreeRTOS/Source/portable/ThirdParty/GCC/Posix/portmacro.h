@@ -127,6 +127,8 @@ extern unsigned long ulPortGetRunTime( void );
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() /* no-op */
 #define portGET_RUN_TIME_COUNTER_VALUE()         ulPortGetRunTime()
 
+static volatile portBASE_TYPE uxCriticalNesting;
+
 #ifdef __cplusplus
 }
 #endif

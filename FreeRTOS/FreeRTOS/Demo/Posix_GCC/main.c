@@ -184,6 +184,7 @@ void vApplicationMallocFailedHook( void )
 }
 /*-----------------------------------------------------------*/
 
+extern pthread_t pthread_self();
 void vApplicationIdleHook( void )
 {
 	/* vApplicationIdleHook() will only be called if configUSE_IDLE_HOOK is set
@@ -197,8 +198,17 @@ void vApplicationIdleHook( void )
 	allocated by the kernel to any task that has since deleted itself. */	
 
 
-	usleep(15000);
-	traceOnEnter();
+	//usleep(15000);
+	//traceOnEnter();
+	while(1) {
+		int i = 0;
+		for(i = 0;i < 900000; i++) {
+			//printf("Idle Executing %lu\n", xTaskGetTickCount());
+			if(i == 0) {
+				//printf("inside idle %lu\n", pthread_self());
+			}
+		}
+	}
 
 	#if ( mainSELECTED_APPLICATION == FULL_DEMO )
 	{

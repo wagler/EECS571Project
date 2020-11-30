@@ -627,6 +627,11 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB ) PRIVILEGED_FUNCTION;
             #endif /* tskSTATIC_AND_DYNAMIC_ALLOCATION_POSSIBLE */
 
             prvInitialiseNewTask( pxTaskCode, pcName, ulStackDepth, pvParameters, uxPriority, &xReturn, pxNewTCB, NULL );
+
+/******************** EDF ********************/
+            printf("$$$$$$$$$$$$$ PTHREAD FOR IDLE TCB %lu IS %lu\n", pxNewTCB, pxNewTCB->pthread->pthread);
+/******************** EDF ********************/
+
             prvAddNewTaskToReadyList( pxNewTCB );
         }
         else
@@ -955,6 +960,11 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB ) PRIVILEGED_FUNCTION;
 //*************************** EDF **********************************//
 
             prvInitialiseNewTask( pxTaskCode, pcName, ( uint32_t ) usStackDepth, pvParameters, uxPriority, pxCreatedTask, pxNewTCB, NULL );
+
+/******************** EDF ********************/
+            printf("$$$$$$$$$$$$$ PTHREAD FOR TCB %lu IS %lu\n", pxNewTCB, (*pxCreatedTask)->pthread->pthread);
+/******************** EDF ********************/
+            
             prvAddNewTaskToReadyList( pxNewTCB );
             xReturn = pdPASS;
         }
@@ -1154,6 +1164,12 @@ static void prvInitialiseNewTask( TaskFunction_t pxTaskCode,
             pxNewTCB->ucDelayAborted = pdFALSE;
         }
     #endif
+
+
+/*************** EDF ******************/
+    pxNewTCB->pthread = (Thread_t *)(pxTopOfStack + 1) - 1;
+/*************** EDF ******************/
+
 
     /* Initialize the TCB stack to look as if the task was already running,
      * but had been interrupted by the scheduler.  The return address is set
@@ -1399,6 +1415,8 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB )
 #endif /* INCLUDE_vTaskDelete */
 /*-----------------------------------------------------------*/
 
+
+
 #if ( INCLUDE_vTaskDelayUntil == 1 )
 
     void vTaskDelayUntil( TickType_t * const pxPreviousWakeTime,
@@ -1500,9 +1518,6 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB )
 
 /****************** EDF *********************/
 		        // PRINT RUNTIME STATS EDF
-		        //TCB_t * currentTCB = prvGetTCBFromHandle(xTaskGetCurrentTaskHandle());
-		        //currentTCB->ulRunTimeCounter++;
-		        printf("\tRuntime: %d\n", pxCurrentTCB->ulRunTimeCounter / 10);
                 pxCurrentTCB->ulRunTimeCounter = 0;
 /****************** EDF *********************/
 
@@ -1538,10 +1553,12 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB )
 /******************************** EDF *********************************/
         // if this thread was squashed last time it ran, it needs to setcontext
         // here to reload the checkpoint
+        pxCurrentTCB->ulRunTimeCounter = 0;
         if(pxCurrentTCB->wasSquashed == pdTRUE) 
         {
             pxCurrentTCB->wasSquashed = pdFALSE;
-            printf("RESETTING CONTEXT %lu\n", pxCurrentTCB->ulDeadline);
+            //printf("RESETTING CONTEXT %lu %lu\n", pxCurrentTCB->ulDeadline, pthread_self());
+            uxCriticalNesting = 0;
             setcontext(pxCurrentTCB->backupContext);
         }
 /******************************** EDF *********************************/
@@ -1880,7 +1897,6 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB )
     void vTaskSuspend( TaskHandle_t xTaskToSuspend )
     {
         TCB_t * pxTCB;
-
         taskENTER_CRITICAL();
         {
             /* If null is passed in here then it is the running task that is
@@ -3203,7 +3219,7 @@ void vTaskSwitchContext( void )
                  * overflows.  The guard against negative values is to protect
                  * against suspect run time stat counter implementations - which
                  * are provided by the application, not the kernel. */
-                if( ulTotalRunTime > ulTaskSwitchedInTime )
+                if( ulTotalRunTime > ulTaskSwitchedInTime && pxCurrentTCB->wasSquashed == pdFALSE)
                 {
                     pxCurrentTCB->ulRunTimeCounter += ( ulTotalRunTime - ulTaskSwitchedInTime );
                 }
@@ -3228,7 +3244,14 @@ void vTaskSwitchContext( void )
 
         /* Select a new task to run using either the generic C or port
          * optimised asm code. */
+	    //TaskHandle_t current = xTaskGetCurrentTaskHandle();
+
         taskSELECT_HIGHEST_PRIORITY_TASK(); /*lint !e9079 void * is used as this macro is used with timers and co-routines too.  Alignment is known to be fine as the type of the pointer stored and retrieved is the same. */
+	    
+        //TaskHandle_t new = xTaskGetCurrentTaskHandle();
+        
+        //printf("\t\tCURRENT %lu NEW %lu TIME: %lu\n", current, new, xTaskGetTickCount());
+        
         traceTASK_SWITCHED_IN();
 
         /* After the new task is switched in, update the global errno. */

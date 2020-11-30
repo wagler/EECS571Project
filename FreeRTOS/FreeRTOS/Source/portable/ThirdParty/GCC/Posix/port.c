@@ -75,28 +75,27 @@ volatile unsigned long ulHighFreqTicks = 0xFFFFF000;
 /**********************************************/
 // FOR CHECKPOINTED TASKS
 extern TCB_t * volatile pxCurrentTCB;
-//extern TickType_t volatile xTickCount;
 /**********************************************/
-
-typedef struct THREAD
-{
-	pthread_t pthread;
-	pdTASK_CODE pxCode;
-	void *pvParams;
-	BaseType_t xDying;
-	struct event *ev;
-} Thread_t;
 
 /*
  * The additional per-thread data is stored at the beginning of the
  * task's stack.
  */
+/*
 static inline Thread_t *prvGetThreadFromTask(TaskHandle_t xTask)
 {
 StackType_t *pxTopOfStack = *(StackType_t **)xTask;
 
 	return (Thread_t *)(pxTopOfStack + 1);
 }
+*/
+
+/******************** EDF ********************/
+static inline Thread_t *prvGetThreadFromTask(TaskHandle_t xTask)
+{
+	return xTask->pthread;
+}
+/******************** EDF ********************/
 
 /*-----------------------------------------------------------*/
 
@@ -105,7 +104,7 @@ static sigset_t xResumeSignals;
 static sigset_t xAllSignals;
 static sigset_t xSchedulerOriginalSignalMask;
 static pthread_t hMainThread = ( pthread_t )NULL;
-static volatile portBASE_TYPE uxCriticalNesting;
+//static volatile portBASE_TYPE uxCriticalNesting;
 /*-----------------------------------------------------------*/
 
 static portBASE_TYPE xSchedulerEnd = pdFALSE;
@@ -371,44 +370,46 @@ uint64_t xExpectedTicks;
 
 	uxCriticalNesting++; /* Signals are blocked in this signal handler. */
 
-if( ulHighFreqTicks++ % 10 == 0 )
-{
+		if( ulHighFreqTicks++ % 10 == 0 )
+		{
+			#if ( configUSE_PREEMPTION == 1 )
+				pxThreadToSuspend = prvGetThreadFromTask( xTaskGetCurrentTaskHandle() );
+			#endif
 
-	#if ( configUSE_PREEMPTION == 1 )
-		pxThreadToSuspend = prvGetThreadFromTask( xTaskGetCurrentTaskHandle() );
-	#endif
+				/* Tick Increment, accounting for any lost signals or drift in
+				* the timer. */
+			/*
+			*      Comment code to adjust timing according to full demo requirements
+			*      xExpectedTicks = (prvGetTimeNs() - prvStartTimeNs)
+			*		/ (portTICK_RATE_MICROSECONDS * 1000);
+			* do { */
+					xTaskIncrementTick();
+					if(pxCurrentTCB->isCheckpointedTask == pdTRUE && pxCurrentTCB->ulRunTimeCounter / 10 >= pxCurrentTCB->runtimeCutoff) 
+					{
+						pxCurrentTCB->wasSquashed = pdTRUE;
+						pxCurrentTCB->ulRunTimeCounter = 0;
 
-		/* Tick Increment, accounting for any lost signals or drift in
-		* the timer. */
-	/*
-	*      Comment code to adjust timing according to full demo requirements
-	*      xExpectedTicks = (prvGetTimeNs() - prvStartTimeNs)
-	*		/ (portTICK_RATE_MICROSECONDS * 1000);
-	* do { */
-			xTaskIncrementTick();
-			if(pxCurrentTCB->isCheckpointedTask == pdTRUE && pxCurrentTCB->ulRunTimeCounter / 10 >= pxCurrentTCB->runtimeCutoff) 
-			{
-				printf("\t\t\tCUTTING OFF AT RUNTIME %lu\n", pxCurrentTCB->ulRunTimeCounter / 10);
-				pxCurrentTCB->wasSquashed = pdTRUE;
+						xTaskResumeFromISR(*pxCurrentTCB->backupTaskHandle);
+						uxCriticalNesting = 0;
+						vTaskDelay(200 / portTICK_RATE_MS);
+					}
+			/*		prvTickCount++;
+			*	} while (prvTickCount < xExpectedTicks);
+			*/
 
-				vTaskResume(*pxCurrentTCB->backupTaskHandle);
-				vTaskDelay(200 / portTICK_RATE_MS);
-				//printf("\t\t\t\tDEADLINE %lu CURRENT TIME %lu\n", pxCurrentTCB->runtimeCutoff, pxCurrentTCB->ulRunTimeCounter);
-			}
-	/*		prvTickCount++;
-	*	} while (prvTickCount < xExpectedTicks);
-	*/
+			#if ( configUSE_PREEMPTION == 1 )
+				/* Select Next Task. */
+				volatile Thread_t * tmp = pthread_self();
+				volatile void * top = xTaskGetCurrentTaskHandle()->pxTopOfStack;
+				volatile void * bot = xTaskGetCurrentTaskHandle()->pxStack;
+				vTaskSwitchContext();
 
-	#if ( configUSE_PREEMPTION == 1 )
-		/* Select Next Task. */
-		vTaskSwitchContext();
+				pxThreadToResume = prvGetThreadFromTask( xTaskGetCurrentTaskHandle() );
 
-		pxThreadToResume = prvGetThreadFromTask( xTaskGetCurrentTaskHandle() );
+				prvSwitchThread(pxThreadToResume, pxThreadToSuspend);
+			#endif
 
-		prvSwitchThread(pxThreadToResume, pxThreadToSuspend);
-	#endif
-
-}
+		}
 
 	uxCriticalNesting--;
 }

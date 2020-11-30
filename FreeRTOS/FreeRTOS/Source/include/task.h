@@ -3115,6 +3115,7 @@ typedef struct tskTaskControlBlock       /* The old naming convention is used to
         UBaseType_t runtimeCutoff; // the runtime at which the task should be squashed
         BaseType_t wasSquashed; // was this task squashed last time it ran?
         ucontext_t * backupContext; // pointer to checkpointed thread context
+        Thread_t * pthread;
 /************************************************/
 
     #if ( configUSE_NEWLIB_REENTRANT == 1 )

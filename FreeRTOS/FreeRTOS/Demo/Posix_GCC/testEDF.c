@@ -34,6 +34,7 @@ int main_blinky(void)
 	xTaskCreateCheckpointed( T1, ( signed char * ) "T1", configMINIMAL_STACK_SIZE, (void *)&dT1, 1, &xT1, pdFALSE, NULL, dT1, NULL); // backup for T2		
 	xTaskCreateCheckpointed( T2, ( signed char * ) "T2", configMINIMAL_STACK_SIZE, (void *)&dT2, 1, &xT2, pdTRUE, &xT1, dT2/2, &backupContext);
 	xTaskCreateCheckpointed( T3, ( signed char * ) "T3", configMINIMAL_STACK_SIZE, (void *)&dT3, 1, &xT3, pdFALSE, NULL, dT3, NULL);
+	//xTaskCreateCheckpointed( T4, ( signed char * ) "T4", configMINIMAL_STACK_SIZE, (void *)&dT4, 1, &xT4, pdFALSE, NULL, dT4, NULL);
 	/********************************/
 
 	/*
@@ -55,13 +56,17 @@ static void T1( void *pvParameters )
 {
 	unsigned int i = 0;
 	unsigned int j = 0;
-	printf("T1 Started, about to suspend...\n", xT1);
+	//printf("T1 Started, about to suspend...\n", xT1);
 	vTaskSuspend(xT1); // self-suspend
 	while(1)
 	{	
 		printf("T1 Executing %lu deadline: %d job: %d\n", xTaskGetTickCount(), ((xTaskGetTickCount() / dT1) + 1) * dT1, j);
 		++j;
-	 	for(i = 0;i < 9000000; i++);
+	 	for(i = 0;i < 9000000; i++) {
+			 if(i == 0) {
+				 //printf("t1 thread: %lu\n", pthread_self());
+			 }
+		 }
 	 	vTaskSuspend(xT1); // self-suspend
 		//vTaskDelay( 100 / portTICK_RATE_MS );	
   }
@@ -75,11 +80,24 @@ static void T2( void *pvParameters )
 	while(1)
 	{
 		getcontext(&backupContext);
+		
+		// MIXED
 		int itervar = 90000000;
 		itervar += (rand() % 10) * itervar;
+		
+		// SLOW
+		//int itervar = 900000000;
+
+		// FAST
+		//int itervar = 90000000;
+		
 		printf("T2 Executing %lu deadline: %d job: %d ITER: %d\n", xTaskGetTickCount(), ((xTaskGetTickCount() / dT2) + 1) * dT2, j, itervar);
 	 	++j;
-		for(i = 0;i < itervar; i++);
+		for(i = 0;i < itervar; i++) {
+			if(i == 0) {
+				//printf("t2 thread: %lu\n", pthread_self());
+			}
+		}
 		vTaskDelay( 200 / portTICK_RATE_MS);
 	}
 }
@@ -92,7 +110,11 @@ static void T3( void *pvParameters )
 	{	
 	 	printf("T3 Executing %lu deadline: %d job: %d\n", xTaskGetTickCount(), ((xTaskGetTickCount() / dT3) + 1) * dT3, j);
 	 	++j;
-	 	for(i = 0;i < 90000000; i++);
+	 	for(i = 0;i < 90000000; i++) {
+			 if(i == 0) {
+				 //printf("t3 thread: %lu\n", pthread_self());
+			 }
+		 }
 	 	vTaskDelay( 300 / portTICK_RATE_MS );	
   }
 }
@@ -106,7 +128,11 @@ static void T4( void *pvParameters )
 	{
 	 	printf("T4 Executing %lu deadline: %d job: %d\n", xTaskGetTickCount(), ((xTaskGetTickCount() / dT4) + 1) * dT4, j);
 	 	++j;
-	 	for(i = 0;i < 90000000; i++);
+	 	for(i = 0;i < 90000000; i++) {
+			 if(i == 0) {
+				 //printf("t4 thread: %lu\n", pthread_self());
+			 }
+		 }
 		vTaskDelay( 400 / portTICK_RATE_MS);
 	}
 }
