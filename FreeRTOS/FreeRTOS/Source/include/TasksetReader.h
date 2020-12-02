@@ -36,59 +36,76 @@ void read_tasksets(char* file_name, TaskSet** ts1, unsigned int* num_sets) {
     ssize_t read;
     char* pt;
     unsigned int set_count = 0;
-    unsigned int num_sets_alloced = 10;
-    unsigned int num_tasks_alloced [10];
-    unsigned int t;
+    unsigned int task_count = 0;
 
-    // Initially we'll make the lists 10 items long
-    // The lists will be resized dynamically as we read in the file
-    ts = (TaskSet*) malloc(10*sizeof(TaskSet));
-    for(unsigned int i = 0; i < 10; i++) {
-        ts[i].num_tasks = 0;
-        ts[i].tasks = (Task*) malloc(10*sizeof(Task));
-        num_tasks_alloced[i] = 10;
-    }
-
-    // Read in the file, line by line
+    // Count number of sets
+    *num_sets = 0;
     getline(&line, &len, fp); // Throw away the first line (column headers)
     while ((read = getline(&line, &len, fp)) != -1) {
+        if (*line == '\n') {
+            *num_sets += 1;
+        }
+    }
+    rewind(fp);
 
-        if (strlen(line)==1) {
+    // Now that we know the number of task sets, we can make an array
+    // to hold all the sets' tasks.
+    ts = (TaskSet*) malloc(*num_sets * sizeof(TaskSet));
+    for (unsigned int i = 0; i < *num_sets; i++) {
+        ts[i].num_tasks = 0;
+    }
+
+    // Count how many tasks are in each set
+    getline(&line, &len, fp); // Throw away the first line (column headers)
+    set_count = 0;
+    while ((read = getline(&line, &len, fp)) != -1) {
+        if (*line == '\n') {
             set_count++;
             continue;
         }
-
-        // Split the line up by the comma delimiters
-        pt = strtok (line,",");
-        t = ts[set_count].num_tasks;
-
-        // Check if TaskSet array is full and needs resizing
-        if (set_count == num_sets_alloced) {
-            ts = realloc(ts, 2*num_sets_alloced*sizeof(TaskSet));
-            num_sets_alloced *= 2;
-        }
-
-        // Check if Task array is full and needs resizing
-        if (t == num_tasks_alloced[set_count]) {
-            ts[set_count].tasks = realloc(ts[set_count].tasks, 2*t*sizeof(Task));
-            num_tasks_alloced[set_count] *= 2;
-        }
-
-        ts[set_count].tasks[t].runtime = atof(pt);
-        pt = strtok (NULL, ",");
-
-        ts[set_count].tasks[t].period = atoi(pt);
-        pt = strtok (NULL, ",");
-
-        ts[set_count].tasks[t].util = atof(pt);
-
         ts[set_count].num_tasks++;
     }
+    rewind(fp);
+
+    // Allocate each set's task array
+    for (unsigned int i = 0; i < *num_sets; i++) {
+        ts[i].tasks = (Task*) malloc(ts[i].num_tasks * sizeof(Task));
+    }
+
+    // Get the data
+    getline(&line, &len, fp); // Throw away the first line (column headers)
+    set_count = 0;
+    task_count = 0;
+    while ((read = getline(&line, &len, fp)) != -1) {
+
+        // If it's a blank line, there's no data to fetch, so continue
+        // This indicates a new set will begin on the next line
+        if (*line == '\n') {
+            if (task_count != ts[set_count].num_tasks) {
+                printf("Bug in grabbing data!!!!");
+            }
+            set_count++;
+            task_count = 0;
+            continue;
+        }
+
+        // Split up the line's 3 pieces of data by comma
+        pt = strtok (line,",");
+        ts[set_count].tasks[task_count].runtime = atof(pt);
+
+        pt = strtok (NULL, ",");
+        ts[set_count].tasks[task_count].period = atoi(pt);
+
+        pt = strtok (NULL, ",");
+        ts[set_count].tasks[task_count].util = atof(pt);
+
+        task_count++;
+    }
+    rewind(fp);
 
     fclose(fp);
     if (line)
         free(line);
 
-    *num_sets = set_count;
     *ts1 = ts;
 }
