@@ -35,6 +35,8 @@
 #include "FreeRTOS.h"
 #include "list.h"
 
+#include "task.h"
+
 /* Lint e9021, e961 and e750 are suppressed as a MISRA exception justified
  * because the MPU ports require MPU_WRAPPERS_INCLUDED_FROM_API_FILE to be
  * defined for the header files above, but not in this file, in order to
@@ -116,7 +118,7 @@ void vListInsertEnd( List_t * const pxList,
 #if ( configUSE_EDF_SCHEDULER == 1 )
 void vListEDFInsertEnd( List_t *pxList, ListItem_t *pxNewListItem )
 {
-	if((pxNewListItem->xItemValue  = task_ADD_DEADLINE( pxNewListItem->pvOwner )) > ulHighFreqTicks )
+	if((pxNewListItem->xItemValue = task_ADD_DEADLINE( pxNewListItem->pvOwner )) > ulHighFreqTicks )
 	{
 	vListInsert( pxList, pxNewListItem );
 	}
@@ -265,7 +267,7 @@ TickType_t xValueOfInsertion;
 		//for( pxIterator = ( ListItem_t * ) &( pxList->xListEnd ); ( ( pxIterator->pxNext->xItemValue <= xValueOfInsertion ) || ( pxIterator->pxNext->xItemValue > 0xF0000000 && pxIterator->pxNext->xItemValue != 0xFFFFFFFF )); pxIterator = pxIterator->pxNext )
 		for( pxIterator = ( ListItem_t * ) &( pxList->xListEnd ); ( ( pxIterator->pxNext->xItemValue <= xValueOfInsertion ) || ( pxIterator->pxNext->xItemValue >= ulHighFreqTicks && pxIterator->pxNext->xItemValue <= 0xFFFFFFFF )); pxIterator = pxIterator->pxNext )
 		{
-			/* There is nothing to do here, we are just iterating to the
+            /* There is nothing to do here, we are just iterating to the
 			wanted insertion position. */
 		}
 	}

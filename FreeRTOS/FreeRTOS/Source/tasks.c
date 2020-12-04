@@ -1557,7 +1557,6 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB )
         if(pxCurrentTCB->wasSquashed == pdTRUE) 
         {
             pxCurrentTCB->wasSquashed = pdFALSE;
-            //printf("RESETTING CONTEXT %lu %lu\n", pxCurrentTCB->ulDeadline, pthread_self());
             uxCriticalNesting = 0;
             setcontext(pxCurrentTCB->backupContext);
         }
@@ -3244,13 +3243,8 @@ void vTaskSwitchContext( void )
 
         /* Select a new task to run using either the generic C or port
          * optimised asm code. */
-	    //TaskHandle_t current = xTaskGetCurrentTaskHandle();
 
         taskSELECT_HIGHEST_PRIORITY_TASK(); /*lint !e9079 void * is used as this macro is used with timers and co-routines too.  Alignment is known to be fine as the type of the pointer stored and retrieved is the same. */
-	    
-        //TaskHandle_t new = xTaskGetCurrentTaskHandle();
-        
-        //printf("\t\tCURRENT %lu NEW %lu TIME: %lu\n", current, new, xTaskGetTickCount());
         
         traceTASK_SWITCHED_IN();
 
@@ -5499,7 +5493,6 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
                 //makes sure that tasks release at fixed frequency, NOT based on when they complete
                 xTimeToWake = (xConstTickCount / pxCurrentTCB->ulDeadline) * pxCurrentTCB->ulDeadline;
                 xTimeToWake += pxCurrentTCB->ulDeadline;
-                //printf("\t\t\twake time 1: %lu\n", xTimeToWake);
 /******** EDF ********/
 
                 /* The list item will be inserted in wake time order. */
@@ -5605,6 +5598,13 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait,
 	{
 		tskTCB * TempTCB;
 		TempTCB = ( tskTCB * )pxTCB;
-	  return TempTCB->ulAbsDeadline = TempTCB->ulDeadline + ulHighFreqTicks; //xTickCount; 
-	}
+        if(TempTCB->ulDeadline == 0) {
+            return TempTCB->ulAbsDeadline = TempTCB->ulDeadline + xTaskGetTickCount();
+        } else {
+            TickType_t tmp = (xTickCount / TempTCB->ulDeadline) * TempTCB->ulDeadline;
+            tmp += TempTCB->ulDeadline;
+            TempTCB->ulAbsDeadline = tmp;
+            return tmp;
+        } 
+    }
 #endif	

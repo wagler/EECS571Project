@@ -389,6 +389,7 @@ uint64_t xExpectedTicks;
 						pxCurrentTCB->wasSquashed = pdTRUE;
 						pxCurrentTCB->ulRunTimeCounter = 0;
 
+						printf("\t\tCUTTING OFF AT %lu\n", xTaskGetTickCount());
 						xTaskResumeFromISR(*pxCurrentTCB->backupTaskHandle);
 						uxCriticalNesting = 0;
 						vTaskDelay(200 / portTICK_RATE_MS);
@@ -399,9 +400,6 @@ uint64_t xExpectedTicks;
 
 			#if ( configUSE_PREEMPTION == 1 )
 				/* Select Next Task. */
-				volatile Thread_t * tmp = pthread_self();
-				volatile void * top = xTaskGetCurrentTaskHandle()->pxTopOfStack;
-				volatile void * bot = xTaskGetCurrentTaskHandle()->pxStack;
 				vTaskSwitchContext();
 
 				pxThreadToResume = prvGetThreadFromTask( xTaskGetCurrentTaskHandle() );

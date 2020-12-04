@@ -43,7 +43,7 @@ int main_blinky(void)
 	xTaskCreate( T3, ( signed char * ) "T3", configMINIMAL_STACK_SIZE, (void *)&dT3, 1 , &xT3 );
 	xTaskCreate( T4, ( signed char * ) "T4", configMINIMAL_STACK_SIZE, (void *)&dT4, 1 , &xT4 );
 	*/
-	
+
 	/* Start the tasks running. */
 	vTaskStartScheduler();
 	
@@ -56,11 +56,11 @@ static void T1( void *pvParameters )
 {
 	unsigned int i = 0;
 	unsigned int j = 0;
-	//printf("T1 Started, about to suspend...\n", xT1);
+	printf("T1 Started, about to suspend...\n", xT1);
 	vTaskSuspend(xT1); // self-suspend
 	while(1)
 	{	
-		printf("T1 Executing %lu deadline: %d job: %d\n", xTaskGetTickCount(), ((xTaskGetTickCount() / dT1) + 1) * dT1, j);
+		printf("T1 Executing %lu deadline: %d job: %d\n", xTaskGetTickCount(), xT1->ulAbsDeadline, j);
 		++j;
 	 	for(i = 0;i < 9000000; i++) {
 			 if(i == 0) {
@@ -91,7 +91,7 @@ static void T2( void *pvParameters )
 		// FAST
 		//int itervar = 90000000;
 		
-		printf("T2 Executing %lu deadline: %d job: %d ITER: %d\n", xTaskGetTickCount(), ((xTaskGetTickCount() / dT2) + 1) * dT2, j, itervar);
+		printf("T2 Executing %lu deadline: %d job: %d ITER: %d\n", xTaskGetTickCount(), xT2->ulAbsDeadline, j, itervar);
 	 	++j;
 		for(i = 0;i < itervar; i++) {
 			if(i == 0) {
@@ -108,7 +108,7 @@ static void T3( void *pvParameters )
 	unsigned int j = 0;
 	while(1)
 	{	
-	 	printf("T3 Executing %lu deadline: %d job: %d\n", xTaskGetTickCount(), ((xTaskGetTickCount() / dT3) + 1) * dT3, j);
+	 	printf("T3 Executing %lu deadline: %d job: %d\n", xTaskGetTickCount(), xT3->ulAbsDeadline, j);
 	 	++j;
 	 	for(i = 0;i < 90000000; i++) {
 			 if(i == 0) {
@@ -126,7 +126,7 @@ static void T4( void *pvParameters )
 	unsigned int j = 0;
 	while(1)
 	{
-	 	printf("T4 Executing %lu deadline: %d job: %d\n", xTaskGetTickCount(), ((xTaskGetTickCount() / dT4) + 1) * dT4, j);
+	 	printf("T4 Executing %lu deadline: %d job: %d\n", xTaskGetTickCount(), xT4->ulAbsDeadline, j);
 	 	++j;
 	 	for(i = 0;i < 90000000; i++) {
 			 if(i == 0) {
