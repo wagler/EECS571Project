@@ -70,8 +70,9 @@
 #define    BLINKY_DEMO       0
 #define    FULL_DEMO         1
 #define    ECHO_CLIENT_DEMO  2
+#define    TASK_GEN_DEMO     3
 
-#define mainSELECTED_APPLICATION BLINKY_DEMO
+#define mainSELECTED_APPLICATION TASK_GEN_DEMO
 
 /* This demo uses heap_3.c (the libc provided malloc() and free()). */
 
@@ -79,6 +80,7 @@
 extern void main_blinky( void );
 extern void main_full( void );
 extern void main_tcp_echo_client_tasks( void );
+extern void main_taskgen(char* filename);
 static void traceOnEnter( void );
 /*
  * Only the comprehensive demo uses application hook (callback) functions.  See
@@ -150,6 +152,11 @@ int main( void )
 	{
 		console_print("Starting echo blinky demo\n");
 		main_blinky();
+	}
+    #elif ( mainSELECTED_APPLICATION == TASK_GEN_DEMO )
+    {
+		console_print("Starting task gen demo\n");
+		main_taskgen("tasksets.txt");
 	}
 	#elif ( mainSELECTED_APPLICATION == FULL_DEMO)
 	{
