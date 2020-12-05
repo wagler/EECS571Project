@@ -271,12 +271,13 @@ Thread_t *xThreadToSuspend;
 Thread_t *xThreadToResume;
 
 	xThreadToSuspend = prvGetThreadFromTask( xTaskGetCurrentTaskHandle() );
-
+	
 	vTaskSwitchContext();
 
 	xThreadToResume = prvGetThreadFromTask( xTaskGetCurrentTaskHandle() );
 
 	prvSwitchThread( xThreadToResume, xThreadToSuspend );
+	printf("@%ld\t Switching to %s\n", xTaskGetTickCount(), pxCurrentTCB->pcTaskName);
 }
 /*-----------------------------------------------------------*/
 
@@ -406,6 +407,9 @@ uint64_t xExpectedTicks;
 				pxThreadToResume = prvGetThreadFromTask( xTaskGetCurrentTaskHandle() );
 
 				prvSwitchThread(pxThreadToResume, pxThreadToSuspend);
+                if (pxThreadToResume != pxThreadToSuspend) {
+                    printf("@%ld\t Switching to %s\n", xTaskGetTickCount(), pxCurrentTCB->pcTaskName);
+                }
 			#endif
 
 		}

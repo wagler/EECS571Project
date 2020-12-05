@@ -35,13 +35,20 @@ int main_gen(void) {
 static void T0_0(void *pvParameters) {
     unsigned int job = 0;
     unsigned long end;
+    TaskStatus_t tst;
+    uint32_t rt = 0;
     for(;;)
     {   
         job++;
-    	end = (xTaskGetTickCount() / 74) * 74 + 6;
-		printf("Executing T0 start: %lu deadline: %ld job: %d \n", xTaskGetTickCount(), ((xTaskGetTickCount() / 74) + 1) * 74, job);
-        while(xTaskGetTickCount() < end) { }
-
+    	//end = (xTaskGetTickCount() / 74) * 74 + 6;
+		end = xTaskGetTickCount() + 6;
+        printf("@%ld\t Started executing T0, Job %d. Deadline: %ld\n", xTaskGetTickCount(), job, ((xTaskGetTickCount() / 74) + 1) * 74);
+        //while(xTaskGetTickCount() < end) { }
+        do {
+            vTaskGetInfo(NULL,&tst,pdFALSE,eRunning);
+            rt = (uint32_t)(tst.ulRunTimeCounter/10);
+        } while (rt < 6);
+        printf("@%ld\t T0, Job %d is complete\n", xTaskGetTickCount(), job);
         vTaskDelay(1);
     }
 }
@@ -52,13 +59,20 @@ static void T0_0(void *pvParameters) {
 static void T0_1(void *pvParameters) {
     unsigned int job = 0;
     unsigned long end;
+    TaskStatus_t tst;
+    uint32_t rt = 0;
     for(;;)
     {   
         job++;
-    	end = (xTaskGetTickCount() / 274) * 274 + 51;
-		printf("Executing T1 start: %lu deadline: %ld job: %d \n", xTaskGetTickCount(), ((xTaskGetTickCount() / 274) + 1) * 274, job);
-        while(xTaskGetTickCount() < end) { }
-
+    	//end = (xTaskGetTickCount() / 274) * 274 + 51;
+		end = xTaskGetTickCount() + 51;
+        printf("@%ld\t Started executing T1, Job %d. Deadline: %ld\n", xTaskGetTickCount(), job, ((xTaskGetTickCount() / 274) + 1) * 274);
+        //while(xTaskGetTickCount() < end) { }
+        do {
+            vTaskGetInfo(NULL,&tst,pdFALSE,eRunning);
+            rt = (uint32_t)(tst.ulRunTimeCounter/10);
+        } while (rt < 51);
+        printf("@%ld\t T1, Job %d is complete\n", xTaskGetTickCount(), job);
         vTaskDelay(1);
     }
 }
@@ -69,13 +83,20 @@ static void T0_1(void *pvParameters) {
 static void T0_2(void *pvParameters) {
     unsigned int job = 0;
     unsigned long end;
+    TaskStatus_t tst;
+    uint32_t rt = 0;
     for(;;)
     {   
         job++;
-    	end = (xTaskGetTickCount() / 116) * 116 + 62;
-		printf("Executing T2 start: %lu deadline: %ld job: %d \n", xTaskGetTickCount(), ((xTaskGetTickCount() / 116) + 1) * 116, job);
-        while(xTaskGetTickCount() < end) { }
-
+    	//end = (xTaskGetTickCount() / 116) * 116 + 62;
+		end = xTaskGetTickCount() + 62;
+        printf("@%ld\t Started executing T2, Job %d. Deadline: %ld\n", xTaskGetTickCount(), job, ((xTaskGetTickCount() / 116) + 1) * 116);
+        //while(xTaskGetTickCount() < end) { }
+        do {
+            vTaskGetInfo(NULL,&tst,pdFALSE,eRunning);
+            rt = (uint32_t)(tst.ulRunTimeCounter/10);
+        } while (rt < 62);
+        printf("@%ld\t T2, Job %d is complete\n", xTaskGetTickCount(), job);
         vTaskDelay(1);
     }
 }
