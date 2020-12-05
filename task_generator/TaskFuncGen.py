@@ -1,4 +1,5 @@
 import csv
+import re
 
 def write_task_func(set_num,task_num,rel_deadline, avg_exe_time):
 
@@ -32,6 +33,14 @@ def write_task_funcs(sets):
             out += "\n"
     return out
 
+def write_task_func_headers(sets):
+    out = ""
+    for set_num,taskset in enumerate(sets):
+        for task_num,task in enumerate(taskset):
+            out += "static void T{}_{}(void *pvParameters);\n".format(set_num,task_num)
+    out += "\n"
+    return out
+
 def write_task_handles(sets):
     out = "xTaskHandle "
     for set_num,taskset in enumerate(sets):
@@ -40,6 +49,36 @@ def write_task_handles(sets):
             if not (task_num==(len(taskset)-1) and set_num==(len(sets)-1)):
                 out += ", "
     out += ";\n\n"
+    return out
+
+def write_task_deadlines(sets):
+    out = ""
+    temp = ""
+    for set_num,taskset in enumerate(sets):
+        for task_num, task in enumerate(taskset):
+            temp = "const unsigned long d{}_{}".format(set_num,task_num)
+            temp += " = {};\n".format(task[1]) #set the deadline
+            out += temp
+    out += "\n"
+    return out
+
+def write_task_create(sets):
+    out = ""
+    temp = ""
+    for set_num,taskset in enumerate(sets):
+        for task_num, task in enumerate(taskset):
+            temp = "xTaskCreateCheckpointed( T{}_{}, ".format(set_num,task_num)
+            temp += "(signed char *) \"T{}_{}\", ".format(set_num,task_num)
+            temp += "configMINIMAL_STACK_SIZE, "
+            temp += "(void*) &dT{}_{}, ".format(set_num,task_num)
+            temp += "1, "
+            temp += "&xT{}_{}, ".format(set_num,task_num)
+            temp += "pdFALSE, "
+            temp += "NULL, "
+            temp += "dT{}_{}, ".format(set_num,task_num)
+            temp += "NULL"
+            temp += ");\n"
+            out += temp
     return out
 
 def write_file_header():
@@ -54,6 +93,16 @@ def write_file_header():
 
 /* Local includes. */
 #include "console.h" \n\n\n"""
+    return out
+
+def write_main_func(sets):
+    out = "int main(void) {\n"
+    creates = write_task_create(sets)
+    creates_indent = re.sub( '^','\t', creates ,flags=re.MULTILINE )
+    out += creates_indent + "\n"
+    out += "\tvTaskStartScheduler();\n"
+    out += "\tfor(;;);\n"
+    out += "}\n\n"
     return out
 
 def read_tasksets_file(filename):
@@ -71,18 +120,28 @@ def read_tasksets_file(filename):
             curr_set.append(row)
     return sets
 
-text_file = open("sample.h", "a")
+if __name__ == "__main__":
+    text_file = open("sample.h", "a")
 
-sets = read_tasksets_file("tasksets.txt")
+    sets = read_tasksets_file("tasksets.txt")
 
-file_header = write_file_header()
-text_file.write(file_header)
+    file_header = write_file_header()
+    text_file.write(file_header)
 
-task_handles = write_task_handles(sets)
-text_file.write(task_handles)
+    task_handles = write_task_handles(sets)
+    text_file.write(task_handles)
 
-task_functions = write_task_funcs(sets)
-text_file.write(task_functions)
+    task_deadlines = write_task_deadlines(sets)
+    text_file.write(task_deadlines)
 
-text_file.close()
+    func_header_stubs = write_task_func_headers(sets)
+    text_file.write(func_header_stubs)
+
+    main_func = write_main_func(sets)
+    text_file.write(main_func)
+
+    task_functions = write_task_funcs(sets)
+    text_file.write(task_functions)
+
+    text_file.close()
 
