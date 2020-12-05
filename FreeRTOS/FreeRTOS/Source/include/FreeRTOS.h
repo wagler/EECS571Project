@@ -1184,8 +1184,8 @@ typedef struct xSTATIC_TCB
         UBaseType_t dummy27;
         BaseType_t dummy28;
         void * dummy29;
-
         void * dummy30;
+        UBaseType_t dummy31;
 /****************** EDF *********************/
     #if ( configUSE_NEWLIB_REENTRANT == 1 )
         struct  _reent xDummy17;

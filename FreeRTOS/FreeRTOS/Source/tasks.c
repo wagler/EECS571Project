@@ -1519,6 +1519,17 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB )
 /****************** EDF *********************/
 		        // PRINT RUNTIME STATS EDF
                 pxCurrentTCB->ulRunTimeCounter = 0;
+
+                if(pxCurrentTCB->isCheckpointedTask == pdTRUE) {
+                    if(pxCurrentTCB->wasSquashed == pdFALSE) {
+                        pxCurrentTCB->consecutiveSquashes = 0;
+                    } else {
+                        if(pxCurrentTCB->consecutiveSquashes == 3) {
+                            printf("ERROR: THREE CONSECUTIVE FAILURES ON TCB %lu\n", pxCurrentTCB);
+                            configASSERT(pdFALSE);
+                        }
+                    }
+                }
 /****************** EDF *********************/
 
                 /* A task that is removed from the event list while the

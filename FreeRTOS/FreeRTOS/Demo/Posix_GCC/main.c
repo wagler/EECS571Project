@@ -73,7 +73,7 @@
 #define    TASK_GEN_DEMO     3
 
 #define mainSELECTED_APPLICATION TASK_GEN_DEMO
-
+//#define mainSELECTED_APPLICATION BLINKY_DEMO
 /* This demo uses heap_3.c (the libc provided malloc() and free()). */
 
 /*-----------------------------------------------------------*/

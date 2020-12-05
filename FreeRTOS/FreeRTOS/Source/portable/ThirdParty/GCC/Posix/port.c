@@ -388,6 +388,7 @@ uint64_t xExpectedTicks;
 					{
 						pxCurrentTCB->wasSquashed = pdTRUE;
 						pxCurrentTCB->ulRunTimeCounter = 0;
+						pxCurrentTCB->consecutiveSquashes++;
 
 						printf("\t\tCUTTING OFF AT %lu\n", xTaskGetTickCount());
 						xTaskResumeFromISR(*pxCurrentTCB->backupTaskHandle);
