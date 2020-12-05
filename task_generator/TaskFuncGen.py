@@ -1,5 +1,6 @@
 import csv
 import re
+import sys
 
 def write_task_func(set_num,task_num,rel_deadline, avg_exe_time):
 
@@ -14,7 +15,7 @@ def write_task_func(set_num,task_num,rel_deadline, avg_exe_time):
         job++;
     """
     srccode+= "\tend = (xTaskGetTickCount() / {}) * {} + {};\n".format(rel_deadline,rel_deadline,avg_exe_time)
-    srccode+= """\t\tprintf("Executing T{} start: %lu deadline: %d job: %d \\n", xTaskGetTickCount(), ((xTaskGetTickCount() / {}) + 1) * {}, job);""".format(task_num,rel_deadline,rel_deadline)
+    srccode+= """\t\tprintf("Executing T{} start: %lu deadline: %ld job: %d \\n", xTaskGetTickCount(), ((xTaskGetTickCount() / {}) + 1) * {}, job);""".format(task_num,rel_deadline,rel_deadline)
     srccode+="""
         while(xTaskGetTickCount() < end) { }
 
@@ -70,12 +71,12 @@ def write_task_create(sets):
             temp = "xTaskCreateCheckpointed( T{}_{}, ".format(set_num,task_num)
             temp += "(signed char *) \"T{}_{}\", ".format(set_num,task_num)
             temp += "configMINIMAL_STACK_SIZE, "
-            temp += "(void*) &dT{}_{}, ".format(set_num,task_num)
+            temp += "(void*) &d{}_{}, ".format(set_num,task_num)
             temp += "1, "
             temp += "&xT{}_{}, ".format(set_num,task_num)
             temp += "pdFALSE, "
             temp += "NULL, "
-            temp += "dT{}_{}, ".format(set_num,task_num)
+            temp += "d{}_{}, ".format(set_num,task_num)
             temp += "NULL"
             temp += ");\n"
             out += temp
@@ -96,7 +97,7 @@ def write_file_header():
     return out
 
 def write_main_func(sets):
-    out = "int main(void) {\n"
+    out = "int main_gen(void) {\n"
     creates = write_task_create(sets)
     creates_indent = re.sub( '^','\t', creates ,flags=re.MULTILINE )
     out += creates_indent + "\n"
@@ -121,27 +122,27 @@ def read_tasksets_file(filename):
     return sets
 
 if __name__ == "__main__":
-    text_file = open("sample.h", "a")
+    if (len(sys.argv) < 3):
+        print("Must provide input taskset file and output C file names")
+        exit()
+    
+    input_file = sys.argv[1]
+    output_file = sys.argv[2]
 
-    sets = read_tasksets_file("tasksets.txt")
+    output_fd = open(output_file, "w")
+
+    sets = read_tasksets_file(input_file)
 
     file_header = write_file_header()
-    text_file.write(file_header)
-
     task_handles = write_task_handles(sets)
-    text_file.write(task_handles)
-
     task_deadlines = write_task_deadlines(sets)
-    text_file.write(task_deadlines)
-
     func_header_stubs = write_task_func_headers(sets)
-    text_file.write(func_header_stubs)
-
     main_func = write_main_func(sets)
-    text_file.write(main_func)
-
     task_functions = write_task_funcs(sets)
-    text_file.write(task_functions)
-
-    text_file.close()
+    
+    out_string = file_header + task_handles + task_deadlines + \
+                    func_header_stubs + main_func + task_functions + "\n"
+    
+    output_fd.write(out_string)
+    output_fd.close()
 

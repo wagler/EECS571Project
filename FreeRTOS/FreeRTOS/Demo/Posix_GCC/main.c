@@ -156,7 +156,7 @@ int main( void )
     #elif ( mainSELECTED_APPLICATION == TASK_GEN_DEMO )
     {
 		console_print("Starting task gen demo\n");
-		main_taskgen("tasksets.txt");
+		main_gen();
 	}
 	#elif ( mainSELECTED_APPLICATION == FULL_DEMO)
 	{
