@@ -4,24 +4,38 @@ import sys
 
 def write_task_func(set_num,task_num,rel_deadline, avg_exe_time):
 
-    srccode= "//Task set #{}, Task #{}\n".format(set_num,task_num)
-    srccode+= "//Deadline: {}, Avg Exe Time: {}\n".format(rel_deadline, avg_exe_time)
-    srccode+="""static void T{}_{}(void *pvParameters)""".format(set_num,task_num) + " {"
-    srccode+="""
-    unsigned int job = 0;
-    unsigned long end;
-    for(;;)
-    {   
-        job++;
-    """
-    srccode+= "\tend = (xTaskGetTickCount() / {}) * {} + {};\n".format(rel_deadline,rel_deadline,avg_exe_time)
-    srccode+= """\t\tprintf("Executing T{} start: %lu deadline: %ld job: %d \\n", xTaskGetTickCount(), ((xTaskGetTickCount() / {}) + 1) * {}, job);""".format(task_num,rel_deadline,rel_deadline)
-    srccode+="""
-        while(xTaskGetTickCount() < end) { }
+    srccode= """//Task set #{}, Task #{}
+//Deadline: {}, Avg Exe Time: {}
+static void T{}(void *pvParameters) {{
 
+    unsigned int job = 0;
+    uint32_t rt = 0;
+    TaskStatus_t tsk_sts;
+    for(;;)
+    {{   
+        job++;
+        printf("@%ld\\t Started executing T{}, Job %d. Deadline: %ld\\n", xTaskGetTickCount(), job, ((xTaskGetTickCount() / {}) + 1) * {});
+ 
+        do {{
+            vTaskGetInfo(NULL,&tsk_sts,pdFALSE,eRunning);
+            rt = (uint32_t)((tsk_sts.ulRunTimeCounter));
+        }} while (rt < {}*10);
+        printf("@%ld\\t T{}, Job %d is complete\\n", xTaskGetTickCount(), job);
         vTaskDelay(1);
-    }"""
-    srccode+="\n}\n\n"
+    }}
+}}\n""".format(
+        set_num,
+        task_num,
+        rel_deadline,
+        avg_exe_time,
+        task_num,
+        task_num,
+        rel_deadline,
+        rel_deadline,
+        avg_exe_time,
+        task_num
+    )
+
 
     return srccode
 
@@ -38,7 +52,7 @@ def write_task_func_headers(sets):
     out = ""
     for set_num,taskset in enumerate(sets):
         for task_num,task in enumerate(taskset):
-            out += "static void T{}_{}(void *pvParameters);\n".format(set_num,task_num)
+            out += "static void T{}(void *pvParameters);\n".format(task_num)
     out += "\n"
     return out
 
@@ -46,7 +60,7 @@ def write_task_handles(sets):
     out = "xTaskHandle "
     for set_num,taskset in enumerate(sets):
         for task_num in range(len(taskset)):
-            out += "xT{}_{}".format(set_num,task_num)
+            out += "xT{}".format(task_num)
             if not (task_num==(len(taskset)-1) and set_num==(len(sets)-1)):
                 out += ", "
     out += ";\n\n"
@@ -57,7 +71,7 @@ def write_task_deadlines(sets):
     temp = ""
     for set_num,taskset in enumerate(sets):
         for task_num, task in enumerate(taskset):
-            temp = "const unsigned long d{}_{}".format(set_num,task_num)
+            temp = "const unsigned long d{}".format(task_num)
             temp += " = {};\n".format(task[1]) #set the deadline
             out += temp
     out += "\n"
@@ -68,15 +82,15 @@ def write_task_create(sets):
     temp = ""
     for set_num,taskset in enumerate(sets):
         for task_num, task in enumerate(taskset):
-            temp = "xTaskCreateCheckpointed( T{}_{}, ".format(set_num,task_num)
-            temp += "(signed char *) \"T{}_{}\", ".format(set_num,task_num)
+            temp = "xTaskCreateCheckpointed( T{}, ".format(task_num)
+            temp += "(signed char *) \"T{}\", ".format(task_num)
             temp += "configMINIMAL_STACK_SIZE, "
-            temp += "(void*) &d{}_{}, ".format(set_num,task_num)
+            temp += "(void*) &d{}, ".format(task_num)
             temp += "1, "
-            temp += "&xT{}_{}, ".format(set_num,task_num)
+            temp += "&xT{}, ".format(task_num)
             temp += "pdFALSE, "
             temp += "NULL, "
-            temp += "d{}_{}, ".format(set_num,task_num)
+            temp += "d{}, ".format(task_num)
             temp += "NULL"
             temp += ");\n"
             out += temp
