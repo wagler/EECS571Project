@@ -22,7 +22,7 @@ static void T{}(void *pvParameters) {{
     for(;;)
     {{   
         job++;
-        printf("@%ld\\t Started executing T{}, Job %d. Deadline: %ld\\n", xTaskGetTickCount(), job, ((xTaskGetTickCount() / {}) + 1) * {});
+        printf("@%ld\\t Started executing T{}, Job %d. Deadline: %ld, Runtime: %d\\n", xTaskGetTickCount(), job, ((xTaskGetTickCount() / {}) + 1) * {},{});
  
         do {{
             vTaskGetInfo(NULL,&tsk_sts,pdFALSE,eRunning);
@@ -40,6 +40,7 @@ static void T{}(void *pvParameters) {{
         task_num,
         rel_deadline,
         rel_deadline,
+        avg_exe_time,
         avg_exe_time,
         task_num
     )
@@ -62,12 +63,14 @@ static void T{}(void *pvParameters) {{
     {{   
         getcontext(&backupContextT{});
         job++;
-        printf("@%ld\\t Started executing T{}, Job %d. Deadline: %ld\\n", xTaskGetTickCount(), job, ((xTaskGetTickCount() / {}) + 1) * {});
-
+        
         rt_bound = avg_rt;
         if ((rand()%100) > 80) {{
             rt_bound = (uint32_t)({}/2) + 2;
         }}
+        
+        printf("@%ld\\t Started executing T{}, Job %d. Deadline: %ld, Runtime: %d\\n", xTaskGetTickCount(), job, ((xTaskGetTickCount() / {}) + 1) * {},rt_bound);
+        
         do {{
             vTaskGetInfo(NULL,&tsk_sts,pdFALSE,eRunning);
             rt = (uint32_t)((tsk_sts.ulRunTimeCounter));

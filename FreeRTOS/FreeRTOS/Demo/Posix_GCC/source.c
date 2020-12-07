@@ -14,11 +14,11 @@
 
 xTaskHandle xT0, xT1, xT1b, xT2, xT3;
 
-const unsigned long d0 = 54;
-const unsigned long d1 = 204;
-const unsigned long d1b = 68;
-const unsigned long d2 = 213;
-const unsigned long d3 = 162;
+const unsigned long d0 = 64;
+const unsigned long d1 = 238;
+const unsigned long d1b = 79;
+const unsigned long d2 = 227;
+const unsigned long d3 = 250;
 
 ucontext_t backupContextT1;
 
@@ -37,16 +37,16 @@ int main_gen(void) {
 	xTaskCreateCheckpointed( T2, (signed char *) "T2", configMINIMAL_STACK_SIZE, (void*) &d2, 1, &xT2, pdFALSE, NULL, d2, NULL);
 	xTaskCreateCheckpointed( T3, (signed char *) "T3", configMINIMAL_STACK_SIZE, (void*) &d3, 1, &xT3, pdFALSE, NULL, d3, NULL);
 	
-	printf("T0: avg runtime=0, period=54, squshable=False\n");
-	printf("T1: avg runtime=70, period=204, squshable=True\n");
-	printf("T2: avg runtime=61, period=213, squshable=False\n");
-	printf("T3: avg runtime=28, period=162, squshable=False\n");
+	printf("T0: avg runtime=9, period=64, squshable=False\n");
+	printf("T1: avg runtime=71, period=238, squshable=True\n");
+	printf("T2: avg runtime=6, period=227, squshable=False\n");
+	printf("T3: avg runtime=84, period=250, squshable=False\n");
 	vTaskStartScheduler();
 	for(;;);
 }
 
 //Task set #0, Task #0
-//Deadline: 54, Avg Exe Time: 0
+//Deadline: 64, Avg Exe Time: 9
 static void T0(void *pvParameters) {
 
     unsigned int job = 0;
@@ -55,36 +55,38 @@ static void T0(void *pvParameters) {
     for(;;)
     {   
         job++;
-        printf("@%ld\t Started executing T0, Job %d. Deadline: %ld\n", xTaskGetTickCount(), job, ((xTaskGetTickCount() / 54) + 1) * 54);
+        printf("@%ld\t Started executing T0, Job %d. Deadline: %ld, Runtime: %d\n", xTaskGetTickCount(), job, ((xTaskGetTickCount() / 64) + 1) * 64,9);
  
         do {
             vTaskGetInfo(NULL,&tsk_sts,pdFALSE,eRunning);
             rt = (uint32_t)((tsk_sts.ulRunTimeCounter));
-        } while (rt < 0*10);
+        } while (rt < 9*10);
         printf("@%ld\t T0, Job %d is complete\n", xTaskGetTickCount(), job);
         vTaskDelay(1);
     }
 }
 
 //Task set #0, Task #1
-//Deadline: 204, Avg Exe Time: 70
+//Deadline: 238, Avg Exe Time: 71
 static void T1(void *pvParameters) {
 
     unsigned int job = 0;
     uint32_t rt = 0;
     TaskStatus_t tsk_sts;
-    const uint32_t avg_rt = 70;
+    const uint32_t avg_rt = 71;
     uint32_t rt_bound = avg_rt;
     for(;;)
     {   
         getcontext(&backupContextT1);
         job++;
-        printf("@%ld\t Started executing T1, Job %d. Deadline: %ld\n", xTaskGetTickCount(), job, ((xTaskGetTickCount() / 204) + 1) * 204);
 
         rt_bound = avg_rt;
         if ((rand()%100) > 80) {
-            rt_bound = (uint32_t)(204/2) + 2;
+            rt_bound = (uint32_t)(238/2) + 2;
         }
+        printf("@%ld\t Started executing T1, Job %d. Deadline: %ld, Runtime: %d\n", xTaskGetTickCount(), job, ((xTaskGetTickCount() / 238) + 1) * 238, rt_bound);
+
+        
         do {
             vTaskGetInfo(NULL,&tsk_sts,pdFALSE,eRunning);
             rt = (uint32_t)((tsk_sts.ulRunTimeCounter));
@@ -95,7 +97,7 @@ static void T1(void *pvParameters) {
 }
 
 //Task set #0, Task #1
-//Deadline: 68, Avg Exe Time: 23
+//Deadline: 79, Avg Exe Time: 23
 static void T1b(void *pvParameters) {
 
     uint32_t rt = 0;
@@ -103,7 +105,7 @@ static void T1b(void *pvParameters) {
     vTaskSuspend(xT1b);
     for(;;)
     {   
-        printf("@%ld\t Started executing T1b. Deadline: %ld\n", xTaskGetTickCount(), ((xTaskGetTickCount() / 68) + 1) * 68);
+        printf("@%ld\t Started executing T1b. Deadline: %ld, Runtime: %d\n", xTaskGetTickCount(), ((xTaskGetTickCount() / 79) + 1) * 79, 23);
  
         do {
             vTaskGetInfo(NULL,&tsk_sts,pdFALSE,eRunning);
@@ -115,7 +117,7 @@ static void T1b(void *pvParameters) {
 }
 
 //Task set #0, Task #2
-//Deadline: 213, Avg Exe Time: 61
+//Deadline: 227, Avg Exe Time: 6
 static void T2(void *pvParameters) {
 
     unsigned int job = 0;
@@ -124,19 +126,19 @@ static void T2(void *pvParameters) {
     for(;;)
     {   
         job++;
-        printf("@%ld\t Started executing T2, Job %d. Deadline: %ld\n", xTaskGetTickCount(), job, ((xTaskGetTickCount() / 213) + 1) * 213);
+        printf("@%ld\t Started executing T2, Job %d. Deadline: %ld, Runtime: %d\n", xTaskGetTickCount(), job, ((xTaskGetTickCount() / 227) + 1) * 227, 6);
  
         do {
             vTaskGetInfo(NULL,&tsk_sts,pdFALSE,eRunning);
             rt = (uint32_t)((tsk_sts.ulRunTimeCounter));
-        } while (rt < 61*10);
+        } while (rt < 6*10);
         printf("@%ld\t T2, Job %d is complete\n", xTaskGetTickCount(), job);
         vTaskDelay(1);
     }
 }
 
 //Task set #0, Task #3
-//Deadline: 162, Avg Exe Time: 28
+//Deadline: 250, Avg Exe Time: 84
 static void T3(void *pvParameters) {
 
     unsigned int job = 0;
@@ -145,12 +147,12 @@ static void T3(void *pvParameters) {
     for(;;)
     {   
         job++;
-        printf("@%ld\t Started executing T3, Job %d. Deadline: %ld\n", xTaskGetTickCount(), job, ((xTaskGetTickCount() / 162) + 1) * 162);
+        printf("@%ld\t Started executing T3, Job %d. Deadline: %ld, Runtime: %d\n", xTaskGetTickCount(), job, ((xTaskGetTickCount() / 250) + 1) * 250, 84);
  
         do {
             vTaskGetInfo(NULL,&tsk_sts,pdFALSE,eRunning);
             rt = (uint32_t)((tsk_sts.ulRunTimeCounter));
-        } while (rt < 28*10);
+        } while (rt < 84*10);
         printf("@%ld\t T3, Job %d is complete\n", xTaskGetTickCount(), job);
         vTaskDelay(1);
     }
