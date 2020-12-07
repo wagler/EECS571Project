@@ -86,8 +86,8 @@ static void T{}(void *pvParameters) {{
         task_num,
         avg_exe_time,
         task_num,
-        task_num,
         rel_deadline,
+        task_num,
         rel_deadline,
         rel_deadline,
         task_num
